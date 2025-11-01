@@ -11,11 +11,9 @@
       <AMapComponent ref="mapComponent" />
     </div>
     <div class="control-panel">
-      <ContactSearch 
-        @search="handleSearch"
-        @draw="handleDraw"
-      />
+      <ContactSearch @search="handleSearch" @draw="handleDraw" />
     </div>
+
   </div>
 </template>
 
@@ -45,17 +43,34 @@ const handleDraw = (contacts) => {
 </script>
 
 <style scoped>
+/* 父容器设置为flex，确保子元素能分配宽度 */
 .contact-tracing-container {
   display: flex;
-  height: 100vh;
+  /* height: 100vh; */
+  /* padding: 20px; */
+  gap: 20px;
 }
 
-.map-container {
-  flex: 1;
-}
 
 .control-panel {
-  width: 300px;
+  /* flex: 1 1 380px; */
+  width: 380px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
+
+}
+
+/* 地图容器：占满剩余宽度 */
+.map-container {
+  flex: 0 0 1200px;
+  position: relative;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 </style>

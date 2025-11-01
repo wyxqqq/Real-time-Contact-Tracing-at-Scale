@@ -39,14 +39,13 @@ const initMap = () => {
 
   // 可以在此添加地图控件和插件
   // 例如：map.value.addControl(new AMap.ControlBar())
-    // 添加地图控件：比例尺
+  // 添加地图控件：比例尺
   map.value.addControl(new AMap.Scale());
   // 添加地图控件：缩放控件
   map.value.addControl(new AMap.ControlBar());
 
-
-
 };
+
 
 /**
  * 绘制联系人轨迹
@@ -65,6 +64,7 @@ const drawTrajectories = (contacts) => {
   // 实际地图绘制逻辑
   // 1. 清除现有覆盖物
   // 2. 根据contacts数据绘制轨迹线和标记点
+
 
   // 1. 清除现有覆盖物
   if (overlays.value.length > 0) {
@@ -146,7 +146,6 @@ const drawTrajectories = (contacts) => {
   if (overlays.value.length > 0) {
     map.value.setFitView(overlays.value, false, [50, 50]);
   }
-
 
 };
 
