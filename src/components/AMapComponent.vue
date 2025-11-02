@@ -5,11 +5,34 @@
 <template>
   <div id="amap-container">
   </div>
+  <div class="input-card" style="width:28rem;">
+    <!-- 正向编码：地址 → 坐标 -->
+    <div class="form-item">
+      <label class="form-label">正向编码（地址转坐标）：</label>
+      <input type="text" class="form-input" v-model="addressInput" placeholder="输入地址（如：北京市天安门）"
+        @keydown.enter="handleForwardGeo">
+      <button class="form-btn" @click="handleForwardGeo">查询坐标</button>
+    </div>
+
+    <!-- 逆向编码：坐标 → 地址 -->
+    <div class="form-item">
+      <label class="form-label">逆向编码（坐标转地址）：</label>
+      <input type="text" class="form-input" v-model="lnglatInput" placeholder="输入经纬度（如：116.39748,39.908823）"
+        @keydown.enter="handleReverseGeo">
+      <button class="form-btn" @click="handleReverseGeo">查询地址</button>
+    </div>
+
+    <!-- 编码结果显示 -->
+    <div class="result-item" v-if="codeResult">
+      <label class="form-label">编码结果：</label>
+      <span class="result-text">{{ codeResult }}</span>
+    </div>
+  </div>
 
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import AMapLoader from "@amap/amap-jsapi-loader";
 
 const props = defineProps({
@@ -20,10 +43,26 @@ const props = defineProps({
   zoom: {
     type: Number,
     default: 11
+  },
+  defaultAddress: { // 重命名props，避免与内部输入框冲突
+    type: String,
+    default: "山东大学(中心校区)"
+  },
+  Geolocation: {
+    type: String,
+    default: ''
   }
 });
 
+// 暴露编码结果给父组件
+const emit = defineEmits(['update:codeResult', 'update:currentLnglat']);
+
+// 内部状态：输入框值、编码结果、地图实例等
+const addressInput = ref(props.defaultAddress); // 正向编码输入框
+const lnglatInput = ref(''); // 逆向编码输入框（经纬度，格式：lng,lat）
+const codeResult = ref(''); // 编码结果文本
 let map = ref(null);
+let marker = ref(null);
 // 存储地图上的覆盖物（轨迹线和标记点），用于后续清除
 const overlays = ref([]);
 
@@ -32,7 +71,115 @@ const scaleRef = ref(null);
 const toolBarRef = ref(null);
 const controlBarRef = ref(null);
 const overViewRef = ref(null);
+const geocoder = ref(null);
 
+// 监听props默认地址变化，同步到输入框
+watch(() => props.defaultAddress, (newVal) => {
+  addressInput.value = newVal;
+}, { immediate: true });
+
+/**
+ * 正向地理编码：地址 → 坐标
+ */
+const handleForwardGeo = () => {
+  if (!geocoder.value || !map.value) {
+    codeResult.value = '地图尚未初始化，请稍后重试';
+    return;
+  }
+  const address = addressInput.value.trim();
+  if (!address) {
+    codeResult.value = '请输入有效地址';
+    return;
+  }
+
+  // 调用高德正向编码API
+  geocoder.value.getLocation(address, (status, result) => {
+    if (status === 'complete' && result.geocodes.length) {
+      const geoResult = result.geocodes[0];
+      const lnglat = [geoResult.location.lng, geoResult.location.lat]; // 坐标数组
+      const formattedResult = `地址：${geoResult.formattedAddress} | 坐标：${lnglat.join(',')} | 城市：${geoResult.city}`;
+
+      // 更新状态：结果显示、marker位置、地图视野
+      codeResult.value = formattedResult;
+      emit('update:currentLnglat', lnglat); // 向父组件传递当前坐标
+      updateMarker(lnglat); // 更新标记点
+      map.value.setFitView(marker.value); // 地图聚焦到标记点
+    } else {
+      codeResult.value = `正向编码失败：${result.info || '未知错误'}`;
+      console.error('正向编码失败', status, result);
+    }
+  });
+};
+
+/**
+ * 逆向地理编码：坐标 → 地址
+ */
+const handleReverseGeo = () => {
+  if (!geocoder.value || !map.value) {
+    codeResult.value = '地图尚未初始化，请稍后重试';
+    return;
+  }
+  const lnglatStr = lnglatInput.value.trim();
+  if (!lnglatStr) {
+    codeResult.value = '请输入有效经纬度（格式：经度,纬度）';
+    return;
+  }
+
+  // 解析经纬度（格式：lng,lat → 数组）
+  const lnglat = lnglatStr.split(',').map(Number);
+  if (lnglat.length !== 2 || isNaN(lnglat[0]) || isNaN(lnglat[1])) {
+    codeResult.value = '经纬度格式错误，请输入如“116.39748,39.908823”的格式';
+    return;
+  }
+
+  // 调用高德逆向编码API
+  geocoder.value.getAddress(lnglat, (status, result) => {
+    if (status === 'complete' && result.regeocode) {
+      const regeoResult = result.regeocode;
+      const formattedResult = `坐标：${lnglat.join(',')} | 详细地址：${regeoResult.formattedAddress} | 行政区域：${regeoResult.addressComponent.province}${regeoResult.addressComponent.city}`;
+
+      // 更新状态：结果显示、marker位置、地图视野
+      codeResult.value = formattedResult;
+      emit('update:codeResult', formattedResult); // 向父组件传递结果
+      updateMarker(lnglat); // 更新标记点
+      map.value.setFitView(marker.value); // 地图聚焦到标记点
+    } else {
+      codeResult.value = `逆向编码失败：${result.info || '未知错误'}`;
+      console.error('逆向编码失败', status, result);
+    }
+  });
+};
+
+
+/**
+ * 更新地图标记点（新增或移动）
+ * @param {Array} lnglat - 坐标数组 [lng, lat]
+ */
+const updateMarker = (lnglat) => {
+  if (!marker.value) {
+    // 新增标记点
+    marker.value = new AMap.Marker({
+      position: lnglat,
+      title: '编码结果位置'
+    });
+    map.value.add(marker.value);
+    overlays.value.push(marker.value); // 加入覆盖物管理
+  } else {
+    // 移动现有标记点
+    marker.value.setPosition(lnglat);
+  }
+};
+
+
+
+// document.getElementById("geo").onclick = geoCode;
+// document.getElementById('address').onkeydown = function (e) {
+//   if (e.keyCode === 13) {
+//     geoCode();
+//     return false;
+//   }
+//   return true;
+// }
 
 /**
  * 初始化高德地图
@@ -50,7 +197,7 @@ const initMap = () => {
     key: "c4238e9a0f79721313732696bc000ea7", // 申请好的Web端开发者Key，首次调用 load 时必填
     version: "2.0", // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
     plugins: ["AMap.Scale", "AMap.ToolBar", "AMap.PolygonEditor", "AMap.ControlBar", "AMap.HawkEye",
-      "AMap.MouseTool", "AMap.PolyEditor", "AMap.PlaceSearch"],
+      "AMap.MouseTool", "AMap.PolyEditor", "AMap.PlaceSearch", "AMap.Geocoder"],
     //需要使用的的插件列表，如比例尺'AMap.Scale'，支持添加多个如：['...','...']
   })
     .then((AMap) => {
@@ -78,13 +225,18 @@ const initMap = () => {
         position: { top: '10px', right: '10px' }
       });
       overViewRef.value = new AMap.HawkEye({ visible: true });
+      geocoder.value = new AMap.Geocoder({
+        // city 指定进行编码查询的城市，支持传入城市名、adcode 和 citycode
+        city: '济南'
+      })
       // 添加控件
       map.value.addControl(scaleRef.value);
       map.value.addControl(toolBarRef.value);
       map.value.addControl(controlBarRef.value);
       map.value.addControl(overViewRef.value);
+      map.value.addControl(geocoder.value);
 
-    });
+});
 
 
 };
