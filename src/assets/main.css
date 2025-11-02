@@ -38,7 +38,7 @@ a,
 
   #app {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
+    /* grid-template-columns: 1fr 1fr; 这个是用来等分网格容器的*/
+    /* padding: 0 2rem; */
   }
 }

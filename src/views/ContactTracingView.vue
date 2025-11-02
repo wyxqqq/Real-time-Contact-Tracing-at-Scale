@@ -48,13 +48,13 @@ const handleDraw = (contacts) => {
   display: flex;
   /* height: 100vh; */
   /* padding: 20px; */
-  gap: 20px;
+  /* gap: 20px; */
 }
 
 
 .control-panel {
-  /* flex: 1 1 380px; */
-  width: 380px;
+  flex: 1 1 20%;
+  width: 20%;
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -67,14 +67,11 @@ const handleDraw = (contacts) => {
 
 /* 地图容器：占满剩余宽度 */
 .map-container {
-  flex: 0 0 1200px;
-  position: relative;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+  flex: 0 0 80%;
+  /* overflow: hidden; */
   padding: 0px;
   margin: 0px;
-  width: 100%;
+  width: 80%;
   height: 100%;
 }
 </style>
