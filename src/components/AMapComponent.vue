@@ -7,7 +7,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import AMapLoader from "@amap/amap-jsapi-loader";
 
 const props = defineProps({
   center: {
@@ -16,11 +17,11 @@ const props = defineProps({
   },
   zoom: {
     type: Number,
-    default: 12
+    default: 11
   }
 });
 
-const map = ref(null);
+let map = ref(null);
 // 存储地图上的覆盖物（轨迹线和标记点），用于后续清除
 const overlays = ref([]);
 
@@ -31,18 +32,18 @@ const overlays = ref([]);
  * <script src="https://webapi.amap.com/maps?v=2.0&key=您的高德地图key" />
  */
 const initMap = () => {
-  // 创建地图实例
-  map.value = new AMap.Map('amap-container', {
-    zoom: props.zoom,    // 地图缩放级别
-    center: props.center // 地图中心点坐标
-  });
+  // // 创建地图实例
+  // map.value = new AMap.Map('amap-container', {
+  //   zoom: props.zoom,    // 地图缩放级别
+  //   center: props.center // 地图中心点坐标
+  // });
 
-  // 可以在此添加地图控件和插件
-  // 例如：map.value.addControl(new AMap.ControlBar())
-  // 添加地图控件：比例尺
-  map.value.addControl(new AMap.Scale());
-  // 添加地图控件：缩放控件
-  map.value.addControl(new AMap.ControlBar());
+  // // 可以在此添加地图控件和插件
+  // // 例如：map.value.addControl(new AMap.ControlBar())
+  // // 添加地图控件：比例尺
+  // map.value.addControl(new AMap.Scale());
+  // // 添加地图控件：缩放控件
+  // map.value.addControl(new AMap.ControlBar());
 
 };
 
@@ -60,6 +61,13 @@ const initMap = () => {
  * }
  */
 const drawTrajectories = (contacts) => {
+  // 地图未初始化时直接返回，避免报错
+  if (!map.value) {
+    console.warn('地图尚未初始化，无法绘制轨迹');
+    return;
+  }
+
+
   console.log('绘制轨迹:', contacts);
   // 实际地图绘制逻辑
   // 1. 清除现有覆盖物
@@ -151,7 +159,43 @@ const drawTrajectories = (contacts) => {
 
 // 组件挂载后初始化地图
 onMounted(() => {
-  initMap();
+  // initMap();
+
+
+  // vue 3 中的组件形式，需要使用 onMounted 生命周期函数
+  // 注意：在使用时，需要在项目中引入高德地图JS API
+  window._AMapSecurityConfig = {
+    securityJsCode: "b618024676d8467b94e95a21e9da6288",
+  };
+  AMapLoader.load({
+    key: "c4238e9a0f79721313732696bc000ea7", // 申请好的Web端开发者Key，首次调用 load 时必填
+    version: "2.0", // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
+    plugins: ["AMap.Scale", "AMap.ToolBar", "AMap.PolygonEditor"], //需要使用的的插件列表，如比例尺'AMap.Scale'，支持添加多个如：['...','...']
+  })
+    .then((AMap) => {
+      map.value = new AMap.Map("amap-container", {
+        // 设置地图容器id
+        viewMode: "2D", // 是否为3D地图模式
+        zoom: props.zoom, // 初始化地图级别
+        center: props.center, // 初始化地图中心点位置
+        // 1. 新增：配置 Canvas 启用 willReadFrequently，解决性能提示
+        renderer: 'canvas',
+        renderConfig: {
+          canvas: {
+            willReadFrequently: true
+          }
+        },
+      })
+      
+      // .catch((e) => {
+      //   console.log(e);
+      // });
+    });
+});
+
+
+onUnmounted(() => {
+  map.value?.destroy();
 });
 
 // 暴露组件方法给父组件
@@ -160,7 +204,6 @@ defineExpose({
 });
 
 </script>
-
 <style scoped>
 #amap-container {
   width: 100%;

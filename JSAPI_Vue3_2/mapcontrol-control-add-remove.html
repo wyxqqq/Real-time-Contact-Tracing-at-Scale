@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>带功能控件的地图</title>
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <script src="//cache.amap.com/lbs/static/es5.min.js"></script>
+    <script
+        src="//webapi.amap.com/maps?v=2.0&key=608d75903d29ad471362f8c58c550daf&&plugin=AMap.Scale,AMap.HawkEye,AMap.ToolBar,AMap.ControlBar"></script>
+
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        #container {
+            height: 100%;
+        }
+
+        .input-card {
+            width: 150px;
+            top: 10px;
+            left: 10px;
+            bottom: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div class='input-card'>
+        <div class="input-item">
+            <input type="checkbox" onclick="toggleScale(this)" />比例尺
+        </div>
+
+        <div class="input-item">
+            <input type="checkbox" id="toolbar" onclick="toggleToolBar(this)" />工具条
+        </div>
+
+        <div class="input-item">
+            <input type="checkbox" id="controlBar" onclick="toggleControlBar(this)" />工具条方向盘
+        </div>
+
+        <div class="input-item">
+            <input type="checkbox" id="overview" checked onclick="toggleOverViewShow(this)" />显示鹰眼
+        </div>
+    </div>
+    <script>
+        var scale = new AMap.Scale({
+            visible: false
+        }),
+            toolBar = new AMap.ToolBar({
+                visible: false,
+                position: {
+                    top: '110px',
+                    right: '40px'
+                }
+            }),
+            controlBar = new AMap.ControlBar({
+                visible: false,
+                position: {
+                    top: '10px',
+                    right: '10px'
+                }
+            }),
+            overView = new AMap.HawkEye({
+                visible: true
+            }),
+            map = new AMap.Map("container", {
+                zoom: 11
+            });
+        map.addControl(scale);
+        map.addControl(toolBar);
+        map.addControl(controlBar);
+        map.addControl(overView);
+        function toggleScale(checkbox) {
+            if (checkbox.checked) {
+                scale.show();
+            } else {
+                scale.hide();
+            }
+        }
+        function toggleToolBar(checkbox) {
+            if (checkbox.checked) {
+                showToolBar();
+            } else {
+                hideToolBar();
+            }
+        }
+        function toggleControlBar(checkbox) {
+            if (checkbox.checked) {
+                document.getElementById('controlBar').checked = true;
+                controlBar.show();
+            } else {
+                document.getElementById('controlBar').checked = false;
+                controlBar.hide();
+            }
+        }
+        function toggleOverViewShow(checkbox) {
+            if (checkbox.checked) {
+                overView.show();
+            } else {
+                overView.hide();
+            }
+        }
+        function showToolBar() {
+            document.getElementById('toolbar').checked = true;
+            toolBar.show();
+        }
+        function hideToolBar() {
+            document.getElementById('toolbar').checked = false;
+            toolBar.hide();
+        }
+    </script>
+</body>
+
+</html>
