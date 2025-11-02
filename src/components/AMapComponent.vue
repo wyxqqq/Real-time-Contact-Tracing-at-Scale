@@ -84,19 +84,6 @@ const toggleOverViewShow = (e) => {
  * <script src="https://webapi.amap.com/maps?v=2.0&key=您的高德地图key" />
  */
 const initMap = () => {
-  // // 创建地图实例
-  // map.value = new AMap.Map('amap-container', {
-  //   zoom: props.zoom,    // 地图缩放级别
-  //   center: props.center // 地图中心点坐标
-  // });
-
-  // // 可以在此添加地图控件和插件
-  // // 例如：map.value.addControl(new AMap.ControlBar())
-  // // 添加地图控件：比例尺
-  // map.value.addControl(new AMap.Scale());
-  // // 添加地图控件：缩放控件
-  // map.value.addControl(new AMap.ControlBar());
-
   // vue 3 中的组件形式，需要使用 onMounted 生命周期函数
   // 注意：在使用时，需要在项目中引入高德地图JS API
   window._AMapSecurityConfig = {
