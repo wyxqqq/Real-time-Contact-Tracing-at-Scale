@@ -4,21 +4,6 @@
 -->
 <template>
   <div id="amap-container">
-    <div class='input-card'>
-      <div class="input-item">
-        <!-- 用@click绑定，传递事件对象$event -->
-        <input type="checkbox" @click="toggleScale($event)" />比例尺
-      </div>
-      <div class="input-item">
-        <input type="checkbox" @click="toggleToolBar($event)" />工具条
-      </div>
-      <div class="input-item">
-        <input type="checkbox" @click="toggleControlBar($event)" />工具条方向盘
-      </div>
-      <div class="input-item">
-        <input type="checkbox" checked @click="toggleOverViewShow($event)" />显示鹰眼
-      </div>
-    </div>
   </div>
 
 </template>
@@ -47,34 +32,6 @@ const scaleRef = ref(null);
 const toolBarRef = ref(null);
 const controlBarRef = ref(null);
 const overViewRef = ref(null);
-
-// 处理比例尺显示/隐藏
-const toggleScale = (e) => {
-  if (scaleRef.value) {
-    e.target.checked ? scaleRef.value.show() : scaleRef.value.hide();
-  }
-};
-
-// 处理工具条显示/隐藏
-const toggleToolBar = (e) => {
-  if (toolBarRef.value) {
-    e.target.checked ? toolBarRef.value.show() : toolBarRef.value.hide();
-  }
-};
-
-// 处理控制条显示/隐藏
-const toggleControlBar = (e) => {
-  if (controlBarRef.value) {
-    e.target.checked ? controlBarRef.value.show() : controlBarRef.value.hide();
-  }
-};
-
-// 处理鹰眼显示/隐藏
-const toggleOverViewShow = (e) => {
-  if (overViewRef.value) {
-    e.target.checked ? overViewRef.value.show() : overViewRef.value.hide();
-  }
-};
 
 
 /**
@@ -111,13 +68,13 @@ const initMap = () => {
         },
       })
       // 初始化控件并赋值给ref
-      scaleRef.value = new AMap.Scale({ visible: false });
+      scaleRef.value = new AMap.Scale({ visible: true });
       toolBarRef.value = new AMap.ToolBar({
-        visible: false,
+        visible: true,
         position: { top: '110px', right: '40px' },
       });
       controlBarRef.value = new AMap.ControlBar({
-        visible: false,
+        visible: true,
         position: { top: '10px', right: '10px' }
       });
       overViewRef.value = new AMap.HawkEye({ visible: true });
