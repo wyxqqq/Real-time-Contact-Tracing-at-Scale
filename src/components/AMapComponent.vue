@@ -70,7 +70,6 @@ const overlays = ref([]);
 const scaleRef = ref(null);
 const toolBarRef = ref(null);
 const controlBarRef = ref(null);
-const overViewRef = ref(null);
 const geocoder = ref(null);
 
 // 监听props默认地址变化，同步到输入框
@@ -196,16 +195,22 @@ const initMap = () => {
   AMapLoader.load({
     key: "c4238e9a0f79721313732696bc000ea7", // 申请好的Web端开发者Key，首次调用 load 时必填
     version: "2.0", // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
-    plugins: ["AMap.Scale", "AMap.ToolBar", "AMap.PolygonEditor", "AMap.ControlBar", "AMap.HawkEye",
+    plugins: ["AMap.Scale", "AMap.ToolBar", "AMap.PolygonEditor", "AMap.ControlBar", 
       "AMap.MouseTool", "AMap.PolyEditor", "AMap.PlaceSearch", "AMap.Geocoder"],
     //需要使用的的插件列表，如比例尺'AMap.Scale'，支持添加多个如：['...','...']
   })
     .then((AMap) => {
       map.value = new AMap.Map("amap-container", {
         // 设置地图容器id
-        viewMode: "2D", // 是否为3D地图模式
+        viewMode: "3D", // 是否为3D地图模式
         zoom: props.zoom, // 初始化地图级别
         center: props.center, // 初始化地图中心点位置
+        terrain: true, //开启地形图
+        pitch: 50, //地图俯仰角度，有效范围 0 度- 83 度
+        rotateEnable: true, //是否开启地图旋转交互 鼠标右键 + 鼠标画圈移动 或 键盘Ctrl + 鼠标左键画圈移动
+        pitchEnable: true, //是否开启地图倾斜交互 鼠标右键 + 鼠标上下移动或键盘Ctrl + 鼠标左键上下移动
+        rotation: -15, //初始地图顺时针旋转的角度
+        zooms: [2, 20], //地图显示的缩放级别范围
         // 1. 新增：配置 Canvas 启用 willReadFrequently，解决性能提示
         renderer: 'canvas',
         renderConfig: {
@@ -224,19 +229,17 @@ const initMap = () => {
         visible: true,
         position: { top: '10px', right: '10px' }
       });
-      overViewRef.value = new AMap.HawkEye({ visible: true });
       geocoder.value = new AMap.Geocoder({
         // city 指定进行编码查询的城市，支持传入城市名、adcode 和 citycode
-        city: '济南'
+        city: '全国'
       })
       // 添加控件
       map.value.addControl(scaleRef.value);
       map.value.addControl(toolBarRef.value);
       map.value.addControl(controlBarRef.value);
-      map.value.addControl(overViewRef.value);
       map.value.addControl(geocoder.value);
 
-});
+    });
 
 
 };
