@@ -45,10 +45,20 @@ const handleDraw = (contacts) => {
 <style scoped>
 /* 父容器设置为flex，确保子元素能分配宽度 */
 .contact-tracing-container {
+<<<<<<< HEAD
   display: flex;
   /* height: 100vh; */
   /* padding: 20px; */
   /* gap: 20px; */
+=======
+  align-items: center;
+  display: flex;
+  min-height: calc(100vh - 60px); /* 减去导航栏高度 */
+  /* margin-top: 60px; */
+  flex-wrap: wrap;
+  /* padding: 20px; 增加内边距 */
+  background-color: #f5f7fa; /* 浅灰背景 */
+>>>>>>> 796f663 (地图展示区和导航栏更美观了)
 }
 
 
@@ -69,9 +79,12 @@ const handleDraw = (contacts) => {
 .map-container {
   flex: 0 0 80%;
   /* overflow: hidden; */
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   padding: 0px;
   margin: 0px;
   width: 80%;
   height: 100%;
+  overflow-y: auto;
 }
 </style>
