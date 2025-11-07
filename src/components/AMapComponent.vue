@@ -3,8 +3,7 @@
 功能：集成高德地图API，提供地图展示和轨迹绘制功能
 -->
 <template>
-  <div id="amap-container">
-  </div>
+  <div id="amap-container"></div>
   <!-- <div class="input-card" style="width:28rem;"> -->
     <!-- 正向编码：地址 → 坐标 -->
     <!-- <div class="form-item">

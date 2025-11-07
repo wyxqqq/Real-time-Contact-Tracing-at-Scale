@@ -6,15 +6,14 @@
 - ContactSearch: 联系人搜索和选择
 -->
 <template>
-  <div class="contact-tracing-container">
+  <section class="contact-tracing-container">
     <div class="map-container">
       <AMapComponent ref="mapComponent" />
     </div>
     <div class="control-panel">
       <ContactSearch @search="handleSearch" @draw="handleDraw" />
     </div>
-
-  </div>
+  </section>
 </template>
 
 <script setup>
@@ -46,9 +45,14 @@ const handleDraw = (contacts) => {
 /* 父容器设置为flex，确保子元素能分配宽度 */
 .contact-tracing-container {
   display: flex;
-  /* height: 100vh; */
+  /* height: 80vh; */
   /* padding: 20px; */
   /* gap: 20px; */
+  margin-top: 60px;
+  flex-wrap: wrap;
+  /* 移动端自动换行 */
+  /* gap: 40px; */
+  align-items: center;
 }
 
 
@@ -67,7 +71,7 @@ const handleDraw = (contacts) => {
 
 /* 地图容器：占满剩余宽度 */
 .map-container {
-  flex: 0 0 80%;
+  flex: 1 1 80%;
   /* overflow: hidden; */
   padding: 0px;
   margin: 0px;
