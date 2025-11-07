@@ -5,29 +5,29 @@
 <template>
   <div id="amap-container">
   </div>
-  <div class="input-card" style="width:28rem;">
+  <!-- <div class="input-card" style="width:28rem;"> -->
     <!-- 正向编码：地址 → 坐标 -->
-    <div class="form-item">
+    <!-- <div class="form-item">
       <label class="form-label">正向编码（地址转坐标）：</label>
       <input type="text" class="form-input" v-model="addressInput" placeholder="输入地址（如：北京市天安门）"
         @keydown.enter="handleForwardGeo">
       <button class="form-btn" @click="handleForwardGeo">查询坐标</button>
-    </div>
+    </div> -->
 
     <!-- 逆向编码：坐标 → 地址 -->
-    <div class="form-item">
+    <!-- <div class="form-item">
       <label class="form-label">逆向编码（坐标转地址）：</label>
       <input type="text" class="form-input" v-model="lnglatInput" placeholder="输入经纬度（如：116.39748,39.908823）"
         @keydown.enter="handleReverseGeo">
       <button class="form-btn" @click="handleReverseGeo">查询地址</button>
-    </div>
+    </div> -->
 
     <!-- 编码结果显示 -->
-    <div class="result-item" v-if="codeResult">
+    <!-- <div class="result-item" v-if="codeResult">
       <label class="form-label">编码结果：</label>
       <span class="result-text">{{ codeResult }}</span>
-    </div>
-  </div>
+    </div> -->
+  <!-- </div> -->
 
 </template>
 

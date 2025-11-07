@@ -1,10 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ContactTracingView from '../views/ContactTracingView.vue'
+import Home from '../components/Home.vue'
+
 
 const routes = [
   {
-    path: '/',
-    name: 'Home',
+    path: '/Home',
+    component: Home
+  },
+  {
+    path: '/ContactTracingView',
     component: ContactTracingView
   }
 ]
