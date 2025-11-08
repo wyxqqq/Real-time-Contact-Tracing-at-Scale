@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <main>
-      
+      这里是首页
     </main>
     
   </div>

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ContactTracingView from '../views/ContactTracingView.vue'
-import Home from '../components/Home.vue'
+import ContactShow from '../views/ContactShow.vue'
+import Home from '../views/Home.vue'
 
 
 const routes = [
@@ -11,6 +12,10 @@ const routes = [
   {
     path: '/ContactTracingView',
     component: ContactTracingView
+  },
+  {
+    path:'/ContactShow',
+    component:ContactShow
   }
 ]
 
