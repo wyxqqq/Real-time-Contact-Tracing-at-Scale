@@ -236,7 +236,7 @@ const initMap = () => {
       map.value.addControl(scaleRef.value);
       map.value.addControl(toolBarRef.value);
       map.value.addControl(controlBarRef.value);
-      map.value.addControl(geocoder.value);
+      // map.value.addControl(geocoder.value);
 
     });
 

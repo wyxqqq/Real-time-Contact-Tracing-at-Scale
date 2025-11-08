@@ -6,14 +6,17 @@ import Home from '../views/Home.vue'
 
 const routes = [
   {
+    name:'Home',
     path: '/Home',
     component: Home
   },
   {
+    name:'ContactTracingView',
     path: '/ContactTracingView',
     component: ContactTracingView
   },
   {
+    name:'ContactShow',
     path:'/ContactShow',
     component:ContactShow
   }
