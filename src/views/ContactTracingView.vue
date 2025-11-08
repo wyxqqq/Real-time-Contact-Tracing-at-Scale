@@ -46,11 +46,13 @@ const handleDraw = (contacts) => {
 .contact-tracing-container {
   align-items: center;
   display: flex;
-  min-height: calc(100vh - 60px); /* 减去导航栏高度 */
+  /* 减去导航栏高度 */
+  min-height: calc(100vh - 60px);
   /* margin-top: 60px; */
   flex-wrap: wrap;
   /* padding: 20px; 增加内边距 */
-  background-color: #f5f7fa; /* 浅灰背景 */
+  background-color: #f5f7fa;
+  /* 浅灰背景 */
 }
 
 
@@ -72,7 +74,7 @@ const handleDraw = (contacts) => {
   flex: 1 1 80%;
   /* overflow: hidden; */
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   padding: 0px;
   margin: 0px;
   width: 80%;
