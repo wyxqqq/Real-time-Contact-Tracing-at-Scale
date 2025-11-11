@@ -61,7 +61,8 @@
 body {
   min-height: 100vh;
   color: var(--color-text);
-  background: linear-gradient(135deg, #3498db, #1abc9c); /* 渐变背景（替代图片） */
+  background: linear-gradient(135deg, #3498db, #1abc9c); /*渐变背景（替代图片）*/
+  /* background: linear-gradient(to bottom right, rgba(245, 154, 190, 0.9), rgba(109, 208, 242, 0.9)); */
   /* background: var(--color-background); */
   transition:
     color 0.5s,
