@@ -11,7 +11,7 @@
   /* 移除最大宽度限制 */
   /* max-width: 1280px; */
   width: 100%;
-  height: 100vh;
+  /* height: 100vh; 这个会让导航栏消失，在滚轮下滑到一定一定高度*/
   /* 充满整个视口高度 */
   margin: 0;
   /* 移除默认外边距 */
@@ -57,7 +57,7 @@ nav {
   /* 增强阴影层次感 */
   position: sticky;
   top: 0;
-  z-index: 999;
+  z-index: 9999;
   display: flex;
   /* 启用flex布局 */
   align-items: center;
