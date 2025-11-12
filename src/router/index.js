@@ -19,7 +19,13 @@ const routes = [
     name:'ContactShow',
     path:'/ContactShow',
     component:ContactShow
+  },
+    {
+    path: '/',
+    name: 'Home_init',
+    component: Home
   }
+
 ]
 
 const router = createRouter({
