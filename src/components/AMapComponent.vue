@@ -243,7 +243,7 @@ const initMap = () => {
         pitchEnable: true, //是否开启地图倾斜交互 鼠标右键 + 鼠标上下移动或键盘Ctrl + 鼠标左键上下移动
         rotation: -15, //初始地图顺时针旋转的角度
         zooms: [2, 20], //地图显示的缩放级别范围
-        showLabel: false,
+        // showLabel: false,
         layers: [distProvince, roadNet],
         // 1. 新增：配置 Canvas 启用 willReadFrequently，解决性能提示
         renderer: 'canvas',
