@@ -4,25 +4,26 @@
 -->
 <template>
   <div id="amap-container"></div>
+  <!-- <div id="map2-container"></div> -->
   <!-- <div class="input-card" style="width:28rem;"> -->
-    <!-- 正向编码：地址 → 坐标 -->
-    <!-- <div class="form-item">
+  <!-- 正向编码：地址 → 坐标 -->
+  <!-- <div class="form-item">
       <label class="form-label">正向编码（地址转坐标）：</label>
       <input type="text" class="form-input" v-model="addressInput" placeholder="输入地址（如：北京市天安门）"
         @keydown.enter="handleForwardGeo">
       <button class="form-btn" @click="handleForwardGeo">查询坐标</button>
     </div> -->
 
-    <!-- 逆向编码：坐标 → 地址 -->
-    <!-- <div class="form-item">
+  <!-- 逆向编码：坐标 → 地址 -->
+  <!-- <div class="form-item">
       <label class="form-label">逆向编码（坐标转地址）：</label>
       <input type="text" class="form-input" v-model="lnglatInput" placeholder="输入经纬度（如：116.39748,39.908823）"
         @keydown.enter="handleReverseGeo">
       <button class="form-btn" @click="handleReverseGeo">查询地址</button>
     </div> -->
 
-    <!-- 编码结果显示 -->
-    <!-- <div class="result-item" v-if="codeResult">
+  <!-- 编码结果显示 -->
+  <!-- <div class="result-item" v-if="codeResult">
       <label class="form-label">编码结果：</label>
       <span class="result-text">{{ codeResult }}</span>
     </div> -->
@@ -61,6 +62,7 @@ const addressInput = ref(props.defaultAddress); // 正向编码输入框
 const lnglatInput = ref(''); // 逆向编码输入框（经纬度，格式：lng,lat）
 const codeResult = ref(''); // 编码结果文本
 let map = ref(null);
+let map2 = ref(null);
 let marker = ref(null);
 // 存储地图上的覆盖物（轨迹线和标记点），用于后续清除
 const overlays = ref([]);
@@ -194,14 +196,45 @@ const initMap = () => {
   AMapLoader.load({
     key: "c4238e9a0f79721313732696bc000ea7", // 申请好的Web端开发者Key，首次调用 load 时必填
     version: "2.0", // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
-    plugins: ["AMap.Scale", "AMap.ToolBar", "AMap.PolygonEditor", "AMap.ControlBar", 
-      "AMap.MouseTool", "AMap.PolyEditor", "AMap.PlaceSearch", "AMap.Geocoder"],
+    plugins: ["AMap.Scale", "AMap.ToolBar", "AMap.PolygonEditor", "AMap.ControlBar",
+      "AMap.MouseTool", "AMap.PolyEditor", "AMap.PlaceSearch", "AMap.Geocoder", "AMap.DistrictLayer"],
     //需要使用的的插件列表，如比例尺'AMap.Scale'，支持添加多个如：['...','...']
   })
     .then((AMap) => {
+
+      //创建路网图层
+      var roadNet = new AMap.TileLayer.RoadNet({
+        zIndex: 20, // 路网层级（低于行政区边界，避免遮挡）
+        // 可选：自定义路网样式（颜色、宽度等）
+        style: {
+          'road-stroke': '#666', // 道路颜色（默认深灰，可调整）
+          'road-stroke-width': 1, // 道路宽度（默认1px）
+          'highway-stroke': '#3388ff', // 高速路颜色
+          'highway-stroke-width': 2, // 高速路宽度
+          'arterial-stroke': '#444', // 主干道颜色
+          'arterial-stroke-width': 1.5 // 主干道宽度
+        }
+      });
+      //创建卫星图层
+      var satellite = new AMap.TileLayer.Satellite();
+
+      //创建省市级行政地图
+      var distProvince = new AMap.DistrictLayer.Province({
+        zIndex: 10, //设置图层层级
+        zooms: [2, 15], //设置图层显示范围
+        adcode: "370100", //设置行政区 adcode 济南adcode370100
+        depth: 2, //设置数据显示层级，0：显示国家面，1：显示省级，当国家为中国时设置depth为2的可以显示市一级
+        styles: {
+          // 直接在图层配置中设置样式（更简洁）
+          "stroke-width": 2, // 行政区边界线宽
+          "stroke": "#3388ff", // 边界颜色（蓝色）
+          "fill": "#e6f4ff" // 区域填充色（浅蓝色，原代码错误已修正）
+        }
+      });
+
       map.value = new AMap.Map("amap-container", {
         // 设置地图容器id
-        viewMode: "3D", // 是否为3D地图模式
+        viewMode: "2D", // 是否为3D地图模式
         zoom: props.zoom, // 初始化地图级别
         center: props.center, // 初始化地图中心点位置
         terrain: true, //开启地形图
@@ -210,6 +243,8 @@ const initMap = () => {
         pitchEnable: true, //是否开启地图倾斜交互 鼠标右键 + 鼠标上下移动或键盘Ctrl + 鼠标左键上下移动
         rotation: -15, //初始地图顺时针旋转的角度
         zooms: [2, 20], //地图显示的缩放级别范围
+        showLabel: false,
+        layers: [distProvince, roadNet],
         // 1. 新增：配置 Canvas 启用 willReadFrequently，解决性能提示
         renderer: 'canvas',
         renderConfig: {
@@ -232,10 +267,13 @@ const initMap = () => {
         // city 指定进行编码查询的城市，支持传入城市名、adcode 和 citycode
         city: '全国'
       })
+
+
       // 添加控件
       map.value.addControl(scaleRef.value);
       map.value.addControl(toolBarRef.value);
       map.value.addControl(controlBarRef.value);
+      map.value.add(roadNet);
       // map.value.addControl(geocoder.value);
 
     });
@@ -378,7 +416,16 @@ defineExpose({
   position: relative;
   width: 100%;
   height: 100%;
+  background-color: #f5f5f5;
+  /* 浅灰色背景，衬托路网线条 */
 }
+
+#map2-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 
 .input-card {
   position: absolute;
