@@ -12,7 +12,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <RouterLink :to="{name:'ContactShow'}" active-class="class-active">密接人员展示</RouterLink>
   </nav>
   <!-- 展示区 -->
-  <RouterView />
+  <RouterView class="all"/>
 </template>
 
 <style scoped>

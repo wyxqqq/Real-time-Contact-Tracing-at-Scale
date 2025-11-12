@@ -204,9 +204,10 @@ const toggleSelectAll = () => {
 /* 关键点：让面板固定在视口内，用 grid 分出“唯一可滚”的结果区 */
 .contact-panel {
   /* 固定在可视区域：当页面滚动时，右侧面板不随高度膨胀 */
-  position: sticky;
-  top: 0;
-  height: 100vh;       /* 视口高度 */
+  /* position: sticky; */
+  /* top: 0; */
+  /* 视口高度 */
+  min-height: 100%;
   overflow: hidden;    /* 自身不滚，内部 .results 滚 */
 
   /* 用 grid 严格划分行高：toolbar / selectall / divider / results / state */
@@ -215,6 +216,18 @@ const toggleSelectAll = () => {
   background: #fff;
   border-left: 1px solid #e8e8e8;
   min-width: 300px;
+
+
+
+  /* flex: 1 1 20%;
+  width: 20%;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; */
 }
 
 /* 搜索栏（row 1） */

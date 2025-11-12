@@ -44,10 +44,10 @@ const handleDraw = (contacts) => {
 <style scoped>
 /* 父容器设置为flex，确保子元素能分配宽度 */
 .contact-tracing-container {
-  align-items: center;
-  display: flex;
-  /* 减去导航栏高度 */
-  min-height: calc(100vh - 60px);
+  top:0;
+  /* align-items: center; */
+  display:flex;
+  /* min-height: 100%; */
   /* margin-top: 60px; */
   flex-wrap: wrap;
   /* padding: 20px; 增加内边距 */
@@ -56,7 +56,7 @@ const handleDraw = (contacts) => {
 }
 
 
-.control-panel {
+/* .control-panel {
   flex: 1 1 20%;
   width: 20%;
   background: white;
@@ -67,7 +67,7 @@ const handleDraw = (contacts) => {
   flex-direction: column;
   overflow-y: auto;
 
-}
+} */
 
 /* 地图容器：占满剩余宽度 */
 .map-container {
