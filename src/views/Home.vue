@@ -5,31 +5,52 @@
       明确标注数据时间范围：“当前展示 1000 秒内济南市人员密接流动数据”，避免用户误解数据跨度。<br>
       简洁传递价值：“基于实时位置分析，精准识别密接 / 次密接，可视化呈现传播轨迹”。<br>
     </header>
-    <section id="card1">
-      <h1>个人密接轨迹查询</h1>
-      <RouterLink :to="{ name: 'ContactTracingView' }" active-class="class-active">查询</RouterLink>
-      卡片1：“个人密接轨迹查询”，配 “输入 ID 查询” 按钮，点击直接跳转至 “密接人员轨道绘制” 页。
-    </section>
 
-    <section id="card2">
-      <h1>密接人员展示</h1>
-      <RouterLink :to="{ name: 'ContactShow' }" active-class="class-active">密接人员展示</RouterLink>
-      卡片 2：“全城密接网络查看”，配 “查看完整网络” 按钮，点击直接跳转至 “密接人员展示” 页。
-    </section>
+
+    <!-- 视频卡片容器1 -->
+    <div class="video-card" @click="handleCardClick">
+      <!-- 封面区域 -->
+      <div class="video-card__cover">
+        <img src="../images/个人轨迹查询.png" alt="{{ title1 }}" class="video-card__image" loading="lazy">
+        <!-- 时长标签
+        <div class="video-card__duration">
+          {{ formatDuration(duration) }}
+        </div> -->
+      </div>
+
+      <!-- 信息区域 -->
+      <div class="video-card__info">
+        <!-- 标题 -->
+        <h3 class="video-card__title" title="{{ title1 }}">
+          {{ title1 }}
+        </h3>
+      </div>
+    </div>
+    <!-- 视频卡片容器2 -->
+    <div class="video-card" @click="handleCardClick" :class="{ 'video-card--wide': wideMode }">
+      <!-- 封面区域 -->
+      <div class="video-card__cover">
+        <img src="../images/密接人员展示.png" alt="{{ title2 }}" class="video-card__image" loading="lazy">
+        <!-- 时长标签
+        <div class="video-card__duration">
+          {{ formatDuration(duration) }}
+        </div> -->
+      </div>
+
+      <!-- 信息区域 -->
+      <div class="video-card__info">
+        <!-- 标题 -->
+        <h3 class="video-card__title" title="{{ title2 }}">
+          {{ title2 }}
+        </h3>
+      </div>
+    </div>
+
 
     <div id="card3">
 
     </div>
-    <section id="card4">
 
-      关键指标卡片（3-4 个）：用大数字直观展示，比如 “总密接次数”“涉及人员数”“次密接人数”“高密接区域数”。
-    </section>
-    <section id="card5">
-      关键指标卡片（3-4 个）：用大数字直观展示，比如 “总密接次数”“涉及人员数”“次密接人数”“高密接区域数”。
-    </section>
-    <section id="card6">
-      关键指标卡片（3-4 个）：用大数字直观展示，比如 “总密接次数”“涉及人员数”“次密接人数”“高密接区域数”。
-    </section>
 
 
   </div>
@@ -39,8 +60,68 @@
 
 
 import * as echarts from 'echarts';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { RouterLink, RouterView } from 'vue-router'
+import { computed } from 'vue';
+
+// 组件Props定义
+const props = defineProps<{
+  // 视频封面图URL
+  coverUrl: string;
+  // 视频标题
+  title: string;
+  // 视频时长（秒数）
+  duration: number;
+  // 视频跳转链接
+  // videoUrl:string;
+  // 播放量（可选）
+  viewCount?: number;
+  // UP主名称（可选）
+  author?: string;
+  // 是否显示额外信息（播放量、UP主）
+  showExtraInfo?: boolean;
+  // 是否宽屏模式（Bilibili有不同尺寸的卡片）
+  wideMode?: boolean;
+  // 是否在新窗口打开
+  targetBlank?: boolean;
+}>();
+
+const videoUrl = '/ContactTracingView';
+const coverUrl = '@/images/VCTCN选手签名.jpg';
+const title1 = ref("个人轨迹查询");
+const title2 = ref("密接人员展示");
+/**
+ * 格式化时长显示（00:00格式）
+ */
+const formatDuration = (seconds: number): string => {
+  const min = Math.floor(seconds / 60);
+  const sec = seconds % 60;
+  return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+};
+
+/**
+ * 格式化播放量显示（万/亿单位）
+ */
+const formatViewCount = (count?: number): string => {
+  if (!count) return '0';
+  if (count >= 100000000) {
+    return `${(count / 100000000).toFixed(1)}亿`;
+  } else if (count >= 10000) {
+    return `${(count / 10000).toFixed(1)}万`;
+  }
+  return count.toString();
+};
+
+/**
+ * 处理卡片点击事件
+ */
+const handleCardClick = () => {
+  if (props.targetBlank) {
+    window.open(videoUrl, '_blank');
+  } else {
+    window.location.href = videoUrl;
+  }
+};
 
 onMounted(() => {
   // 卡片三：折线图
@@ -213,6 +294,12 @@ onMounted(() => {
 
   optionCard3 && myChartCard3.setOption(optionCard3);
 
+
+
+
+
+
+
 })
 
 
@@ -220,6 +307,17 @@ onMounted(() => {
 </script>
 
 <style scoped>
+body {
+  font-family: "Microsoft YaHei", sans-serif;
+  background-color: #f9f9f9;
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-top: 20px;
+}
+
 .home {
   display: flex;
   justify-content: center;
@@ -238,23 +336,6 @@ onMounted(() => {
   color: black;
 }
 
-#card1 {
-  width: 90%;
-  height: 600px;
-  margin: 30px auto;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-#card2 {
-  width: 90%;
-  height: 600px;
-  margin: 30px auto;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
 
 #card3 {
   width: 90%;
@@ -265,41 +346,168 @@ onMounted(() => {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-#card4 {
-  width: 90%;
-  height: 600px;
-  margin: 30px auto;
-  border: 1px solid #eee;
+
+/* 基础卡片样式 */
+.video-card {
+  /* display: flex;
+  flex-direction: column;
+  width: 100%;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative; */
 
-#card5 {
-  width: 90%;
-  height: 600px;
-  margin: 30px auto;
-  border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  width: 40vh;
+  margin: 25px;
 }
 
-#card6 {
-  width: 90%;
-  height: 600px;
-  margin: 30px auto;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+/* 卡片悬停效果 */
+.video-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
-body {
-  font-family: "Microsoft YaHei", sans-serif;
-  background-color: #f9f9f9;
+/* 悬停时播放按钮显示 */
+.video-card:hover .video-card__play-btn {
+  opacity: 1;
+  transform: scale(1);
 }
 
-h1 {
-  text-align: center;
-  color: #333;
-  margin-top: 20px;
+/* 悬停时封面图缩放 */
+.video-card:hover .video-card__image {
+  transform: scale(1.03);
+}
+
+/* 悬停时标题颜色变化 */
+.video-card:hover .video-card__title {
+  color: #00a1d6;
+}
+
+/* 封面区域 */
+.video-card__cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  /* Bilibili标准卡片比例 */
+  overflow: hidden;
+}
+
+/* 封面图片 */
+.video-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+/* 时长标签（右下角） */
+.video-card__duration {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 12px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  z-index: 1;
+}
+
+/* 播放按钮（悬停显示） */
+.video-card__play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  width: 40px;
+  height: 40px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 1;
+}
+
+.video-card__play-btn i {
+  margin-left: 1px;
+  /* 播放图标居中微调 */
+}
+
+/* 信息区域 */
+.video-card__info {
+  padding: 10px 8px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 标题样式 */
+.video-card__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #18191c;
+  line-height: 1.4;
+  display: -webkit-box;
+  /* -webkit-line-clamp: 2; */
+  /* 最多显示2行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0 0 6px 0;
+  transition: color 0.2s ease;
+}
+
+/* 元信息（播放量、UP主） */
+.video-card__meta {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #99a2aa;
+  gap: 12px;
+}
+
+.video-card__view,
+.video-card__author {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.video-card__view i,
+.video-card__author i {
+  font-size: 11px;
+}
+
+/* 响应式调整 - 移动端 */
+@media (max-width: 768px) {
+  .video-card .video-card__info {
+    padding: 8px 6px;
+  }
+
+  .video-card .video-card__title {
+    font-size: 13px;
+    /* -webkit-line-clamp: 1; */
+    /* 移动端显示1行 */
+  }
+
+  .video-card .video-card__meta {
+    gap: 8px;
+    font-size: 11px;
+  }
 }
 </style>

@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 import AMapComponent from '@/components/AMapComponent.vue';
 import ContactSearch from '@/components/ContactSearch.vue';
 
@@ -44,9 +44,9 @@ const handleDraw = (contacts) => {
 <style scoped>
 /* 父容器设置为flex，确保子元素能分配宽度 */
 .contact-tracing-container {
-  top:0;
+  top: 0;
   /* align-items: center; */
-  display:flex;
+  display: flex;
   /* min-height: 100%; */
   /* margin-top: 60px; */
   flex-wrap: wrap;
