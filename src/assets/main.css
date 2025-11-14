@@ -106,3 +106,8 @@ nav a.class-active {
   margin-top: 60px;
   min-height: calc(100vh - 60px);
 }
+
+header {
+  width: 100vh;
+  height: 20vh;
+}
