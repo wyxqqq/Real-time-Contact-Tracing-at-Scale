@@ -216,18 +216,6 @@ const toggleSelectAll = () => {
   background: #fff;
   border-left: 1px solid #e8e8e8;
   min-width: 300px;
-
-
-
-  /* flex: 1 1 20%;
-  width: 20%;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 25px;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto; */
 }
 
 /* 搜索栏（row 1） */

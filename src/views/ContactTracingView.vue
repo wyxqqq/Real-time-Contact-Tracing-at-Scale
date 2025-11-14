@@ -55,19 +55,7 @@ const handleDraw = (contacts) => {
   /* 浅灰背景 */
 }
 
-
-/* .control-panel {
-  flex: 1 1 20%;
-  width: 20%;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 25px;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-
-} */
+/* .control-panel 写在子组件页面 */
 
 /* 地图容器：占满剩余宽度 */
 .map-container {

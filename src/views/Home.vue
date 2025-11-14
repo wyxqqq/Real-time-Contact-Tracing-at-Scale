@@ -1,21 +1,10 @@
 <template>
   <div class="home">
-    <header>
-      数据范围与系统价值提示（顶部横幅）<br>
-      明确标注数据时间范围：“当前展示 1000 秒内济南市人员密接流动数据”，避免用户误解数据跨度。<br>
-      简洁传递价值：“基于实时位置分析，精准识别密接 / 次密接，可视化呈现传播轨迹”。<br>
-    </header>
-
-
     <!-- 视频卡片容器1 -->
     <div class="video-card" @click="handleCardClick">
       <!-- 封面区域 -->
       <div class="video-card__cover">
         <img src="../images/个人轨迹查询.png" alt="{{ title1 }}" class="video-card__image" loading="lazy">
-        <!-- 时长标签
-        <div class="video-card__duration">
-          {{ formatDuration(duration) }}
-        </div> -->
       </div>
 
       <!-- 信息区域 -->
@@ -27,14 +16,10 @@
       </div>
     </div>
     <!-- 视频卡片容器2 -->
-    <div class="video-card" @click="handleCardClick" :class="{ 'video-card--wide': wideMode }">
+    <div class="video-card" @click="handleCardClick">
       <!-- 封面区域 -->
       <div class="video-card__cover">
         <img src="../images/密接人员展示.png" alt="{{ title2 }}" class="video-card__image" loading="lazy">
-        <!-- 时长标签
-        <div class="video-card__duration">
-          {{ formatDuration(duration) }}
-        </div> -->
       </div>
 
       <!-- 信息区域 -->
@@ -349,17 +334,6 @@ h1 {
 
 /* 基础卡片样式 */
 .video-card {
-  /* display: flex;
-  flex-direction: column;
-  width: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s ease;
-  cursor: pointer;
-  position: relative; */
-
   display: flex;
   flex-direction: column;
   border-radius: 8px;
@@ -368,7 +342,7 @@ h1 {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
   cursor: pointer;
-  width: 40vh;
+  width: 50vh;
   margin: 25px;
 }
 
