@@ -35,6 +35,8 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import AMapLoader from "@amap/amap-jsapi-loader";
 
+import contacts from '../data/contacts.json';
+
 const props = defineProps({
   center: {
     type: Array,
@@ -51,7 +53,13 @@ const props = defineProps({
   Geolocation: {
     type: String,
     default: ''
-  }
+  },
+  // 视图二专用 - 当前选中时间(0-10000)
+  selectedTime: {
+    type: Number,
+    default: 0
+  },
+
 });
 
 // 暴露编码结果给父组件
@@ -281,6 +289,93 @@ const initMap = () => {
 
 };
 
+// 视图二专用 - 联系人标记功能
+const contactMarkers = ref([]);
+const infoWindow = ref(null);
+const allContacts = ref([]);
+
+// 视图二专用 - 初始化所有联系人标记点
+const initContactMarkers = () => {
+  // 清除现有标记
+  if (contactMarkers.value.length > 0) {
+    map.value?.remove(contactMarkers.value);
+    contactMarkers.value = [];
+  }
+
+		  // 创建所有标记点（初始全部隐藏）
+		  allContacts.value = contacts.map(contact => {
+	    const marker = new AMap.Marker({
+	      position: [contact.lng, contact.lat],
+	      content: `
+	        <div style="background: #ff4757; color: white; 
+	          padding: 2px 5px; border-radius: 3px; font-size: 12px;">
+	          ${contact.person1}-${contact.person2}
+	        </div>
+	      `,
+	      offset: new AMap.Pixel(-15, -15),
+	      visible: false // 初始隐藏
+	    });
+	    return {
+	      marker,
+	      time: contact.time
+	    };
+	  });
+
+  // 添加到地图
+  contactMarkers.value = allContacts.value.map(item => item.marker);
+  if (map.value && contactMarkers.value.length > 0) {
+    map.value.add(contactMarkers.value);
+  }
+};
+
+// 视图二专用 - 根据时间筛选显示标记点
+const filterMarkersByTime = () => {
+  const currentTime = props.selectedTime;
+  let visibleCount = 0;
+
+  allContacts.value.forEach(item => {
+    const isVisible = item.time <= currentTime;
+    item.marker.setVisible(isVisible);
+    if (isVisible) visibleCount++;
+  });
+
+  return visibleCount;
+};
+
+// 视图二专用 - 显示密接统计信息
+const showStatistics = () => {
+  if (infoWindow.value) {
+    infoWindow.value.close();
+  }
+  
+  const visibleCount = filterMarkersByTime();
+  infoWindow.value = new AMap.InfoWindow({
+    content: `
+      <div style="padding: 5px 10px; background: white; border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.3)">
+        <div style="font-weight: bold; margin-bottom: 5px;">密接统计</div>
+        <div>时段: 0-${props.selectedTime}</div>
+        <div>密接事件数: ${visibleCount}</div>
+      </div>
+    `,
+    offset: new AMap.Pixel(0, -30)
+  });
+  
+  if (map.value) {
+    infoWindow.value.open(map.value, map.value.getCenter());
+  }
+};
+
+// 组件挂载后初始化地图和联系人标记点
+onMounted(() => {
+  initMap();
+  initContactMarkers();
+});
+
+// 视图二专用 - 监听时间变化更新显示
+watch(() => props.selectedTime, () => {
+  showStatistics();
+});
+
 
 /**
  * 绘制联系人轨迹
@@ -404,6 +499,8 @@ onMounted(() => {
 onUnmounted(() => {
   map.value?.destroy();
 });
+
+
 
 // 暴露组件方法给父组件
 defineExpose({
