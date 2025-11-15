@@ -60,6 +60,43 @@
 import { ref, computed } from 'vue'
 import AMapComponent from '../components/AMapComponent.vue';
 
+// 获取地图组件实例
+const mapComponent = ref(null);
+
+// 示例：绘制多条折线
+const drawMultiplePolylines = () => {
+  // 示例坐标数组1
+  const path1 = [
+    [117.049206, 36.659856],
+    [117.065411, 36.659021],
+    [116.926597, 36.662657]
+  ];
+
+  // 示例坐标数组2
+  const path2 = [
+    [117.149206, 36.759856],
+    [117.165411, 36.759021],
+    [117.226597, 36.762657]
+  ];
+
+  // 调用地图组件的折线绘制方法
+  if (mapComponent.value) {
+    // 绘制第一条折线（使用默认样式）
+    mapComponent.value.addPolyline(path1);
+    
+    // 绘制第二条折线（自定义样式）
+    mapComponent.value.addPolyline(path2, {
+      strokeColor: '#00ff00',
+      strokeWeight: 4,
+      showDir: false
+    });
+  }
+};
+
+
+
+
+
 /** 搜索输入：ID/关键字 */
 const personId = ref('')
 

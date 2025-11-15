@@ -7,7 +7,7 @@
 </template>
 
 <script setup name="AMapConponent">
-import { ref, onMounted, onUnmounted} from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import AMapLoader from "@amap/amap-jsapi-loader";
 
 // const props = defineProps({
@@ -69,11 +69,10 @@ const initMap = () => {
     key: "c4238e9a0f79721313732696bc000ea7", // 申请好的Web端开发者Key，首次调用 load 时必填
     version: "2.0", // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
     plugins: ["AMap.Scale", "AMap.ToolBar", "AMap.PolygonEditor", "AMap.ControlBar",
-      "AMap.MouseTool", "AMap.PolyEditor", "AMap.PlaceSearch", "AMap.Geocoder", "AMap.DistrictLayer"],
+      "AMap.MouseTool", "AMap.PolyEditor", "AMap.PlaceSearch", "AMap.Geocoder", "AMap.DistrictLayer", "AMap.Polyline"],
     //需要使用的的插件列表，如比例尺'AMap.Scale'，支持添加多个如：['...','...']
   })
     .then((AMap) => {
-
       //创建路网图层
       var roadNet = new AMap.TileLayer.RoadNet({
         zIndex: 2, // 路网层级（低于行政区边界，避免遮挡）
@@ -136,19 +135,60 @@ const initMap = () => {
       geocoder.value = new AMap.Geocoder({
         // city 指定进行编码查询的城市，支持传入城市名、adcode 和 citycode
         city: '全国'
-      })
-
+      });
 
       // 添加控件
       map.value.addControl(scaleRef.value);
       map.value.addControl(toolBarRef.value);
       map.value.addControl(controlBarRef.value);
       map.value.add(roadNet);
-      // map.value.addControl(geocoder.value);
 
     });
 
 
+};
+
+/**
+ * 通用折线绘制函数
+ * @param {Array} path 坐标数组，格式: [[lng, lat], [lng, lat], ...]
+ * @param {Object} options 折线样式配置（可选）
+ * @returns {AMap.Polyline} 绘制的折线实例
+ */
+const addPolyline = (path, options = {}) => {
+  if (!map.value) {
+    console.warn('地图尚未初始化，无法绘制折线');
+    return null;
+  }
+
+  // 转换坐标为AMap.LngLat对象
+  const lngLatPath = path.map(loc => new AMap.LngLat(loc[0], loc[1]));
+
+  // 默认样式配置
+  const defaultOptions = {
+    strokeWeight: 6,
+    strokeColor: "red",
+    lineJoin: "round",
+    strokeOpacity: 0.5,
+    showDir: true,
+    zIndex: 50
+  };
+
+  // 合并默认配置和用户配置
+  const polylineOptions = { ...defaultOptions, ...options };
+
+  // 创建折线实例
+  const polyline = new AMap.Polyline({
+    path: lngLatPath,
+    ...polylineOptions
+  });
+
+  // 添加到地图
+  map.value.add(polyline);
+
+  // 加入覆盖物管理
+  overlays.value.push(polyline);
+
+  return polyline;
 };
 
 
@@ -277,7 +317,9 @@ onUnmounted(() => {
 
 // 暴露组件方法给父组件
 defineExpose({
-  drawTrajectories
+  drawTrajectories,
+  drawTrajectories,
+  addPolyline, // 通用折线绘制（父组件传坐标）
 });
 
 </script>
