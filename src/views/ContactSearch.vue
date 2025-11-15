@@ -1,61 +1,64 @@
 <template>
-  <div class="map-container">
-    <AMapComponent ref="mapComponent" />
-  </div>
-  <div class="contact-panel">
-    <!-- 顶部工具栏：搜索（grid row 1） -->
-    <form class="toolbar" @submit.prevent="handleSearch">
-      <input v-model.trim="personId" class="search-input" type="text" placeholder="输入要搜索的 ID（回车或点搜索）"
-        aria-label="搜索ID" />
-      <button type="submit" class="btn primary">搜索</button>
-    </form>
-
-    <!-- 顶部：全选（grid row 2，仅影响“关联ID”） -->
-    <div class="select-all-row">
-      <label class="select-all">
-        <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" :disabled="relatedCount === 0" />
-        <span>全选</span>
-      </label>
+  <div class="contact-tracing-container">
+    <div class="map-container">
+      <AMapComponent ref="mapComponent" />
     </div>
+    <div class="contact-panel">
+      <!-- 顶部工具栏：搜索（grid row 1） -->
+      <form class="toolbar" @submit.prevent="handleSearch">
+        <input v-model.trim="personId" class="search-input" type="text" placeholder="输入要搜索的 ID（回车或点搜索）"
+          aria-label="搜索ID" />
+        <button type="submit" class="btn primary">搜索</button>
+      </form>
 
-    <!-- 细黑线分隔（grid row 3，1px 固定高） -->
-    <div class="divider"></div>
-
-    <!-- 结果区（grid row 4，唯一可滚区域） -->
-    <div class="results">
-      <!-- 空状态 -->
-      <div class="empty" v-if="!loading && results.length === 0">
-        暂无结果，请输入 ID 后搜索
-      </div>
-
-      <!-- 结果卡 -->
-      <div v-for="item in results" :key="item.id" class="result-card" :data-type="item.type"
-        :class="[{ hidden: !item.visualize }, item.type]">
-        <div class="result-main">
-          <div class="id">
-            <!-- 徽标：主=疑(红)，关=密(黄) -->
-            <span class="badge" v-if="item.type === 'base'">疑</span>
-            <span class="badge alt" v-else>密</span>
-            <span class="id-text">ID：{{ item.id }}</span>
-          </div>
-        </div>
-
-        <!-- 右侧可见性：主ID无复选框；关联ID有复选框（无文字） -->
-        <label v-if="item.type === 'related'" class="toggle-visual" title="切换该路径显示/隐藏">
-          <input type="checkbox" v-model="item.visualize" @change="toggleVisualize(item)" />
+      <!-- 顶部：全选（grid row 2，仅影响“关联ID”） -->
+      <div class="select-all-row">
+        <label class="select-all">
+          <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" :disabled="relatedCount === 0" />
+          <span>全选</span>
         </label>
       </div>
-    </div>
 
-    <!-- 加载态（grid row 5，自动高度，不参与滚动） -->
-    <div class="state" v-if="loading">正在加载…</div>
+      <!-- 细黑线分隔（grid row 3，1px 固定高） -->
+      <div class="divider"></div>
+
+      <!-- 结果区（grid row 4，唯一可滚区域） -->
+      <div class="results">
+        <!-- 空状态 -->
+        <div class="empty" v-if="!loading && results.length === 0">
+          暂无结果，请输入 ID 后搜索
+        </div>
+
+        <!-- 结果卡 -->
+        <div v-for="item in results" :key="item.id" class="result-card" :data-type="item.type"
+          :class="[{ hidden: !item.visualize }, item.type]">
+          <div class="result-main">
+            <div class="id">
+              <!-- 徽标：主=疑(红)，关=密(黄) -->
+              <span class="badge" v-if="item.type === 'base'">疑</span>
+              <span class="badge alt" v-else>密</span>
+              <span class="id-text">ID：{{ item.id }}</span>
+            </div>
+          </div>
+
+          <!-- 右侧可见性：主ID无复选框；关联ID有复选框（无文字） -->
+          <label v-if="item.type === 'related'" class="toggle-visual" title="切换该路径显示/隐藏">
+            <input type="checkbox" v-model="item.visualize" @change="toggleVisualize(item)" />
+          </label>
+        </div>
+      </div>
+
+      <!-- 加载态（grid row 5，自动高度，不参与滚动） -->
+      <div class="state" v-if="loading">正在加载…</div>
+    </div>
   </div>
+
 </template>
 
 <script setup>
 
 import { ref, computed } from 'vue'
-import AMapComponent from './AMapComponent.vue';
+import AMapComponent from '../components/AMapComponent.vue';
 
 /** 搜索输入：ID/关键字 */
 const personId = ref('')
@@ -183,6 +186,20 @@ const toggleSelectAll = () => {
 </script>
 
 <style scoped>
+/* 父容器设置为flex，确保子元素能分配宽度 */
+.contact-tracing-container {
+  top: 0;
+  /* align-items: center; */
+  display: flex;
+  flex-direction: row;
+  
+  /* min-height: 100%; */
+  /* margin-top: 60px; */
+  flex-wrap: nowrap;
+  /* padding: 20px; 增加内边距 */
+  background-color: #f5f7fa;
+  /* 浅灰背景 */
+}
 
 /* .control-panel 写在子组件页面 */
 
