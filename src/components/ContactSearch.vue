@@ -1,26 +1,19 @@
 <template>
+  <div class="map-container">
+    <AMapComponent ref="mapComponent" />
+  </div>
   <div class="contact-panel">
     <!-- 顶部工具栏：搜索（grid row 1） -->
     <form class="toolbar" @submit.prevent="handleSearch">
-      <input
-        v-model.trim="personId"
-        class="search-input"
-        type="text"
-        placeholder="输入要搜索的 ID（回车或点搜索）"
-        aria-label="搜索ID"
-      />
+      <input v-model.trim="personId" class="search-input" type="text" placeholder="输入要搜索的 ID（回车或点搜索）"
+        aria-label="搜索ID" />
       <button type="submit" class="btn primary">搜索</button>
     </form>
 
     <!-- 顶部：全选（grid row 2，仅影响“关联ID”） -->
     <div class="select-all-row">
       <label class="select-all">
-        <input
-          type="checkbox"
-          v-model="selectAll"
-          @change="toggleSelectAll"
-          :disabled="relatedCount === 0"
-        />
+        <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" :disabled="relatedCount === 0" />
         <span>全选</span>
       </label>
     </div>
@@ -36,13 +29,8 @@
       </div>
 
       <!-- 结果卡 -->
-      <div
-        v-for="item in results"
-        :key="item.id"
-        class="result-card"
-        :data-type="item.type"
-        :class="[{ hidden: !item.visualize }, item.type]"
-      >
+      <div v-for="item in results" :key="item.id" class="result-card" :data-type="item.type"
+        :class="[{ hidden: !item.visualize }, item.type]">
         <div class="result-main">
           <div class="id">
             <!-- 徽标：主=疑(红)，关=密(黄) -->
@@ -53,16 +41,8 @@
         </div>
 
         <!-- 右侧可见性：主ID无复选框；关联ID有复选框（无文字） -->
-        <label
-          v-if="item.type === 'related'"
-          class="toggle-visual"
-          title="切换该路径显示/隐藏"
-        >
-          <input
-            type="checkbox"
-            v-model="item.visualize"
-            @change="toggleVisualize(item)"
-          />
+        <label v-if="item.type === 'related'" class="toggle-visual" title="切换该路径显示/隐藏">
+          <input type="checkbox" v-model="item.visualize" @change="toggleVisualize(item)" />
         </label>
       </div>
     </div>
@@ -73,7 +53,9 @@
 </template>
 
 <script setup>
+
 import { ref, computed } from 'vue'
+import AMapComponent from './AMapComponent.vue';
 
 /** 搜索输入：ID/关键字 */
 const personId = ref('')
@@ -201,6 +183,22 @@ const toggleSelectAll = () => {
 </script>
 
 <style scoped>
+
+/* .control-panel 写在子组件页面 */
+
+/* 地图容器：占满剩余宽度 */
+.map-container {
+  flex: 1 1 80%;
+  /* overflow: hidden; */
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 0px;
+  margin: 0px;
+  width: 80%;
+  height: 100%;
+  overflow-y: auto;
+}
+
 /* 关键点：让面板固定在视口内，用 grid 分出“唯一可滚”的结果区 */
 .contact-panel {
   /* 固定在可视区域：当页面滚动时，右侧面板不随高度膨胀 */
@@ -208,7 +206,8 @@ const toggleSelectAll = () => {
   /* top: 0; */
   /* 视口高度 */
   min-height: 100%;
-  overflow: hidden;    /* 自身不滚，内部 .results 滚 */
+  overflow: hidden;
+  /* 自身不滚，内部 .results 滚 */
 
   /* 用 grid 严格划分行高：toolbar / selectall / divider / results / state */
   display: grid;
@@ -225,6 +224,7 @@ const toggleSelectAll = () => {
   padding: 10px;
   border-bottom: 1px solid #f0f0f0;
 }
+
 .search-input {
   flex: 1;
   height: 34px;
@@ -233,10 +233,12 @@ const toggleSelectAll = () => {
   border-radius: 8px;
   outline: none;
 }
+
 .search-input:focus {
   border-color: #1677ff;
   box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
 }
+
 .btn {
   height: 34px;
   padding: 0 14px;
@@ -245,12 +247,16 @@ const toggleSelectAll = () => {
   border-radius: 8px;
   cursor: pointer;
 }
+
 .btn.primary {
   color: #fff;
   background: #1677ff;
   border-color: #1677ff;
 }
-.btn.primary:hover { background: #2b7bff; }
+
+.btn.primary:hover {
+  background: #2b7bff;
+}
 
 /* 全选（row 2） */
 .select-all-row {
@@ -259,6 +265,7 @@ const toggleSelectAll = () => {
   gap: 10px;
   padding: 8px 10px 4px 10px;
 }
+
 .select-all {
   display: inline-flex;
   align-items: center;
@@ -266,6 +273,7 @@ const toggleSelectAll = () => {
   font-size: 14px;
   color: #333;
 }
+
 .select-all input[type="checkbox"] {
   width: 16px;
   height: 16px;
@@ -275,12 +283,14 @@ const toggleSelectAll = () => {
 .divider {
   height: 1px;
   background: #000;
-  margin: 0 10px;  /* 与左右留白对齐 */
+  margin: 0 10px;
+  /* 与左右留白对齐 */
 }
 
 /* 结果列表（row 4）：唯一可滚区域 */
 .results {
-  overflow-y: auto;    /* 鼠标滚轮只滚这里 */
+  overflow-y: auto;
+  /* 鼠标滚轮只滚这里 */
   overflow-x: hidden;
   padding: 6px 10px 10px;
   scrollbar-gutter: stable;
@@ -290,13 +300,16 @@ const toggleSelectAll = () => {
 .results::-webkit-scrollbar {
   width: 8px;
 }
+
 .results::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .results::-webkit-scrollbar-thumb {
   background: #d0d0d0;
   border-radius: 6px;
 }
+
 .results:hover::-webkit-scrollbar-thumb {
   background: #b5b5b5;
 }
@@ -321,10 +334,24 @@ const toggleSelectAll = () => {
   border: 1px solid #efefef;
   border-radius: 10px;
 }
-.result-card:hover { background: #f6f9ff; }
-.result-card.base { border-left: 3px solid #f5222d; }   /* red for base(疑) */
-.result-card.related { border-left: 3px solid #fadb14; }/* yellow for related(密) */
-.result-card.hidden { opacity: 0.55; }
+
+.result-card:hover {
+  background: #f6f9ff;
+}
+
+.result-card.base {
+  border-left: 3px solid #f5222d;
+}
+
+/* red for base(疑) */
+.result-card.related {
+  border-left: 3px solid #fadb14;
+}
+
+/* yellow for related(密) */
+.result-card.hidden {
+  opacity: 0.55;
+}
 
 /* ID显示 */
 .result-main {
@@ -332,11 +359,13 @@ const toggleSelectAll = () => {
   align-items: center;
   gap: 8px;
 }
+
 .id {
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -346,13 +375,17 @@ const toggleSelectAll = () => {
   border-radius: 6px;
   font-size: 12px;
   color: #fff;
-  background: #f5222d;  /* red for base(疑) */
+  background: #f5222d;
+  /* red for base(疑) */
   user-select: none;
 }
+
 .badge.alt {
-  background: #fadb14;  /* yellow for related(密) */
+  background: #fadb14;
+  /* yellow for related(密) */
   color: #000;
 }
+
 .id-text {
   font-weight: 600;
   color: #222;
@@ -364,6 +397,7 @@ const toggleSelectAll = () => {
   align-items: center;
   user-select: none;
 }
+
 .toggle-visual input[type="checkbox"] {
   width: 16px;
   height: 16px;
