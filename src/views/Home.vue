@@ -126,13 +126,13 @@ onMounted(() => {
 
     // 生成x轴时间数据（0~1000秒，步长10秒）
     for (let t = 0; t <= 1000; t += 10) {
-      xData.push(t);
+      yData.push(t);
 
       // 逻辑斯蒂增长公式：y = K / (1 + e^(-r(t - t0)))
       const infectionCount = Math.round(
         maxPeople / (1 + Math.exp(-growthRate * (t - midPoint)))
       );
-      yData.push(infectionCount);
+      xData.push(infectionCount);
     }
     return { xData, yData };
   };
@@ -189,7 +189,7 @@ onMounted(() => {
     },
 
     // x轴配置（时间轴）
-    xAxis: {
+    yAxis: {
       type: 'value',
       name: '时间（秒）',
       nameLocation: 'middle',
@@ -217,7 +217,7 @@ onMounted(() => {
     },
 
     // y轴配置（感染人数轴）
-    yAxis: {
+    xAxis: {
       type: 'value',
       name: '感染人数（人）',
       nameLocation: 'middle',

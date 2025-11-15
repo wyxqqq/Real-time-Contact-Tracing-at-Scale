@@ -50,13 +50,13 @@ a,
 
 nav {
   /* visibility: hidden; */
-  background-color: #3A4A6F;
-  /* 深紫蓝色，与粉蓝渐变协调 */
   height: 60px;
   /* 固定高度更美观 */
   width: 100%;
   padding: 0 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  background-color: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   /* 增强阴影层次感 */
   position: fixed;
   top: 0;
@@ -69,9 +69,9 @@ nav {
 
 /* 导航链接样式 */
 nav a {
-  background-color: #3A4A6F;
+    background-color: #fff;
   /* 深紫蓝色，与粉蓝渐变协调 */
-  color: #FFFFFF;
+  color: #000000;
   /* 白色文字，确保清晰可读 */
   text-decoration: none;
   padding: 0 15px;
@@ -92,14 +92,11 @@ nav a:hover {
 }
 
 nav a.class-active {
-  color: #D9E0FF;
+  color: #23ADE5;
   /*  hover时的浅紫蓝，增强交互感 */
   /* 活跃状态背景色 */
-  font-weight: 500;
-  color: #ffc268;
-  font-weight: 900;
-  text-shadow: 0 0 1px black;
-  font-family: 微软雅黑;
+  font-weight: 2000;
+  font-weight: bold;
 }
 
 .all {

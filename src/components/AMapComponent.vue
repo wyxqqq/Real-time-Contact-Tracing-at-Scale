@@ -76,7 +76,7 @@ const initMap = () => {
 
       //创建路网图层
       var roadNet = new AMap.TileLayer.RoadNet({
-        zIndex: 20, // 路网层级（低于行政区边界，避免遮挡）
+        zIndex: 2, // 路网层级（低于行政区边界，避免遮挡）
         // 可选：自定义路网样式（颜色、宽度等）
         style: {
           'road-stroke': '#666', // 道路颜色（默认深灰，可调整）
@@ -87,12 +87,10 @@ const initMap = () => {
           'arterial-stroke-width': 1.5 // 主干道宽度
         }
       });
-      //创建卫星图层
-      var satellite = new AMap.TileLayer.Satellite();
 
       //创建省市级行政地图
       var distProvince = new AMap.DistrictLayer.Province({
-        zIndex: 10, //设置图层层级
+        zIndex: 1, //设置图层层级
         zooms: [2, 15], //设置图层显示范围
         adcode: "370100", //设置行政区 adcode 济南adcode370100
         depth: 2, //设置数据显示层级，0：显示国家面，1：显示省级，当国家为中国时设置depth为2的可以显示市一级

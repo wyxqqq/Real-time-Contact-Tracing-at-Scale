@@ -1,54 +1,74 @@
 <template>
   <div class="ContactShow">
+    <!-- 地图容器：展示轨迹 -->
     <div class="map-container">
       <AMapComponent ref="mapComponent" />
     </div>
-    <div class="LineChart"></div>
+
+    <!-- 图表区域：展示轨迹分析（如时间-位置变化） -->
+    <div class="LineChart">
+      <div class="chart-header">
+        <h3>密接人员数量随时间的变化</h3>
+      </div>
+      <div id="trajectory-chart" class="chart-container"></div>
+    </div>
   </div>
 </template>
 
-<script setup lang="ts" name="Home">
+<script setup lang="ts" name="ContactShow">
+import { ref, onMounted } from 'vue';
 import AMapComponent from '@/components/AMapComponent.vue';
+import * as echarts from 'echarts';
+
+
+
+// 组件挂载时初始化
+onMounted(() => {
+
+});
+
 
 </script>
 
 <style scoped>
 .ContactShow {
-  top: 0;
-  /* align-items: center; */
   display: flex;
-  /* min-height: 100%; */
-  /* margin-top: 60px; */
-  flex-wrap: wrap;
-  /* padding: 20px; 增加内边距 */
+  min-height: calc(100vh - 60px);
+  /* 减去导航栏高度 */
   background-color: #f5f7fa;
-  /* 浅灰背景 */
+  color: black;
 }
 
-/* 地图容器：占满剩余宽度 */
 .map-container {
-  flex: 1 1 50%;
-  /* overflow: hidden; */
+  flex: 1 1 60%;
+  /* 地图占比60% */
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  padding: 0px;
-  margin: 0px;
-  width: 50%;
-  height: 100%;
-  overflow-y: auto;
+  overflow: hidden;
+  margin-left: 16px;
 }
 
 .LineChart {
-  /* 视口高度 */
-  min-height: 100%;
-  overflow: hidden;
-  /* 自身不滚，内部 .results 滚 */
-
-  /* 用 grid 严格划分行高：toolbar / selectall / divider / results / state */
-  display: grid;
-  grid-template-rows: auto auto 1px minmax(0, 1fr) auto;
+  flex: 1 1 40%;
+  /* 图表占比40% */
   background: #fff;
-  border-left: 1px solid #e8e8e8;
-  min-width: 300px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  margin-right: 16px;
+}
+
+.chart-header {
+  margin-bottom: 16px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+.chart-container {
+  flex: 1;
+  width: 100%;
+  min-height: 400px;
 }
 </style>
