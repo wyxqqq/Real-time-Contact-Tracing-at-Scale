@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <!-- 视频卡片容器1 -->
-    <div class="video-card" @click="handleCardClick">
+    <div class="video-card" @click="handleCardClick1">
       <!-- 封面区域 -->
       <div class="video-card__cover">
         <img src="../images/个人轨迹查询.png" alt="{{ title1 }}" class="video-card__image" loading="lazy">
@@ -16,7 +16,7 @@
       </div>
     </div>
     <!-- 视频卡片容器2 -->
-    <div class="video-card" @click="handleCardClick">
+    <div class="video-card" @click="handleCardClick2">
       <!-- 封面区域 -->
       <div class="video-card__cover">
         <img src="../images/密接人员展示.png" alt="{{ title2 }}" class="video-card__image" loading="lazy">
@@ -32,258 +32,34 @@
     </div>
 
 
-    <div id="card3">
-
-    </div>
-
-
 
   </div>
 </template>
 
-<script setup lang="ts" name="Home">
+<script setup name="Home">
 
 
 import * as echarts from 'echarts';
 import { onMounted, ref } from 'vue';
-import { RouterLink, RouterView } from 'vue-router'
-import { computed } from 'vue';
 
-// 组件Props定义
-const props = defineProps<{
-  // 视频封面图URL
-  coverUrl: string;
-  // 视频标题
-  title: string;
-  // 视频时长（秒数）
-  duration: number;
-  // 视频跳转链接
-  // videoUrl:string;
-  // 播放量（可选）
-  viewCount?: number;
-  // UP主名称（可选）
-  author?: string;
-  // 是否显示额外信息（播放量、UP主）
-  showExtraInfo?: boolean;
-  // 是否宽屏模式（Bilibili有不同尺寸的卡片）
-  wideMode?: boolean;
-  // 是否在新窗口打开
-  targetBlank?: boolean;
-}>();
 
-const videoUrl = '/ContactTracingView';
-const coverUrl = '@/images/VCTCN选手签名.jpg';
+const videoUrl1 = '/ContactSearch';
+const videoUrl2 = '/ContactShow';
+
 const title1 = ref("个人轨迹查询");
 const title2 = ref("密接人员展示");
-/**
- * 格式化时长显示（00:00格式）
- */
-const formatDuration = (seconds: number): string => {
-  const min = Math.floor(seconds / 60);
-  const sec = seconds % 60;
-  return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-};
-
-/**
- * 格式化播放量显示（万/亿单位）
- */
-const formatViewCount = (count?: number): string => {
-  if (!count) return '0';
-  if (count >= 100000000) {
-    return `${(count / 100000000).toFixed(1)}亿`;
-  } else if (count >= 10000) {
-    return `${(count / 10000).toFixed(1)}万`;
-  }
-  return count.toString();
-};
 
 /**
  * 处理卡片点击事件
  */
-const handleCardClick = () => {
-  if (props.targetBlank) {
-    window.open(videoUrl, '_blank');
-  } else {
-    window.location.href = videoUrl;
-  }
+const handleCardClick1 = () => {
+  window.location.href = videoUrl1;
+};
+const handleCardClick2 = () => {
+  window.location.href = videoUrl2;
 };
 
 onMounted(() => {
-  // 卡片三：折线图
-  // 1. 初始化图表实例
-  const chartDomCard3 = document.getElementById('card3');
-  const myChartCard3 = echarts.init(chartDomCard3);
-
-  // 2. 模拟数据（符合传染病传播的 S 型增长规律）
-  // x轴：时间（0~1000秒，每10秒一个数据点）
-  // y轴：感染人数（使用逻辑斯蒂增长模型模拟真实传播趋势）
-  const generateCard3Data = () => {
-    const xData = [];
-    const yData = [];
-    const maxPeople = 5000; // 总易感人群数量
-    const growthRate = 0.01; // 传播速率
-    const midPoint = 500; // 增长拐点时间（秒）
-
-    // 生成x轴时间数据（0~1000秒，步长10秒）
-    for (let t = 0; t <= 1000; t += 10) {
-      yData.push(t);
-
-      // 逻辑斯蒂增长公式：y = K / (1 + e^(-r(t - t0)))
-      const infectionCount = Math.round(
-        maxPeople / (1 + Math.exp(-growthRate * (t - midPoint)))
-      );
-      xData.push(infectionCount);
-    }
-    return { xData, yData };
-  };
-
-  // 获取模拟数据
-  const { xData, yData } = generateCard3Data();
-
-  // 3. 图表配置项
-  const optionCard3 = {
-    // 标题配置
-    title: {
-      text: '感染人数时间动态变化',
-      subtext: '时间范围：0~1000秒',
-      left: 'center',
-      textStyle: {
-        fontSize: 18,
-        fontWeight: 600
-      },
-      subtextStyle: {
-        fontSize: 14,
-        color: '#666'
-      }
-    },
-
-    // 图例配置
-    legend: {
-      data: ['感染人数'],
-      top: 50,
-      left: 'center'
-    },
-
-    // 网格配置（图表与容器的边距）
-    grid: {
-      left: '10%',
-      right: '5%',
-      bottom: '15%',
-      top: '15%',
-      containLabel: true // 包含坐标轴标签
-    },
-
-    // 提示框配置（鼠标悬浮显示）
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'shadow' // 阴影指示器
-      },
-      formatter: function (params) {
-        // 自定义提示框内容
-        return `时间：${params[0].data} 秒<br/>感染人数：${params[0].value} 人`;
-      },
-      textStyle: {
-        fontSize: 14
-      }
-    },
-
-    // x轴配置（时间轴）
-    yAxis: {
-      type: 'value',
-      name: '时间（秒）',
-      nameLocation: 'middle',
-      nameGap: 30, // 轴名称与轴线的距离
-      nameTextStyle: {
-        fontSize: 14,
-        fontWeight: 500
-      },
-      min: 0,
-      max: 1000,
-      axisLabel: {
-        formatter: '{value}s', // 标签格式
-        interval: 100 // 每100秒显示一个标签
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#333'
-        }
-      },
-      splitLine: {
-        lineStyle: {
-          color: '#eee'
-        }
-      }
-    },
-
-    // y轴配置（感染人数轴）
-    xAxis: {
-      type: 'value',
-      name: '感染人数（人）',
-      nameLocation: 'middle',
-      nameGap: 40,
-      nameTextStyle: {
-        fontSize: 14,
-        fontWeight: 500
-      },
-      axisLabel: {
-        formatter: '{value}人'
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#333'
-        }
-      },
-      splitLine: {
-        lineStyle: {
-          color: '#eee'
-        }
-      }
-    },
-
-    // 系列数据配置（折线图）
-    series: [
-      {
-        name: '感染人数',
-        type: 'line',
-        data: yData.map((y, index) => [xData[index], y]), // 数据格式：[x, y]
-        smooth: true, // 平滑曲线
-        symbol: 'circle', // 数据点样式：圆形
-        symbolSize: 6, // 数据点大小
-        lineStyle: {
-          width: 3,
-          color: '#e74c3c' // 折线颜色（红色系，符合感染主题）
-        },
-        itemStyle: {
-          color: '#e74c3c',
-          borderColor: '#fff',
-          borderWidth: 2
-        },
-        areaStyle: {
-          // 填充区域（渐变效果）
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(231,76,60,0.3)' },
-            { offset: 1, color: 'rgba(231,76,60,0.05)' }
-          ])
-        },
-        emphasis: {
-          // 鼠标悬浮时的样式
-          itemStyle: {
-            symbolSize: 10,
-            color: '#c0392b'
-          }
-        }
-      }
-    ]
-  };
-
-  optionCard3 && myChartCard3.setOption(optionCard3);
-
-
-
-
-
-
 
 })
 
