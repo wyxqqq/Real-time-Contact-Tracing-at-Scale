@@ -1,7 +1,3 @@
-<!-- 
-高德地图组件（优化版）
-功能：集成高德地图API，提供地图展示和轨迹绘制功能（性能优化版）
--->
 <template>
     <div id="amap-container" class="map-container"></div>
 </template>
@@ -11,6 +7,7 @@ import { ref, shallowRef, onMounted, onUnmounted, nextTick } from 'vue';
 import AMapLoader from "@amap/amap-jsapi-loader";
 
 // 地图核心实例（使用shallowRef减少响应式开销）
+// shallowRef 是一个用于创建浅层响应式引用的 API，它属于 Vue 的 reactivity 模块（通常与 ref、reactive 等配合使用）。
 let map = shallowRef(null);
 let AMapInstance = shallowRef(null);
 // 存储覆盖物和坐标数据
@@ -19,7 +16,7 @@ const coordinates = ref([]);
 // 存储动态加载的插件实例
 const dynamicPlugins = ref({});
 
-// 防抖函数
+// 防抖函数  核心作用是控制高频触发的函数在指定时间内只执行一次
 const debounce = (func, wait) => {
     let timeout;
     return function executedFunction(...args) {
@@ -35,6 +32,7 @@ const debounce = (func, wait) => {
 /**
  * 初始化高德地图
  */
+// async 是用于声明异步函数的关键字，它配合 await 关键字一起使用
 const initMap = async () => {
     try {
         // 异步注入安全配置（避免阻塞初始化）
@@ -75,7 +73,8 @@ const initializeMapDirectly = () => {
                 rotateEnable: false,
                 pitchEnable: false,
                 renderer: 'canvas', // 优化渲染性能
-                zooms: [2, 20],
+                zooms: [1, 20],
+                showLabel: false,
             });
 
             // 地图渲染完成后初始化基础图层
@@ -100,6 +99,21 @@ const initializeBaseLayers = () => {
     const roadNet = new AMapInstance.value.TileLayer.RoadNet({ zIndex: 2 });
     map.value.add(roadNet);
     overlays.value.push(roadNet);
+    //创建省市级行政地图
+    const distProvince = new AMap.DistrictLayer.Province({
+        zIndex: 1, //设置图层层级
+        zooms: [1, 20], //设置图层显示范围
+        adcode: "370100", //设置行政区 adcode 济南adcode370100
+        depth: 2, //设置数据显示层级，0：显示国家面，1：显示省级，当国家为中国时设置depth为2的可以显示市一级
+        styles: {
+            // 直接在图层配置中设置样式（更简洁）
+            "stroke-width": 2, // 行政区边界线宽
+            "stroke": "#3388ff", // 边界颜色（蓝色）
+            "fill": "#e6f4ff" // 区域填充色（浅蓝色，原代码错误已修正）
+        }
+    });
+    map.value.add(distProvince);
+    overlays.value.push(distProvince);
 
     // 按需加载控件（点击地图时加载）
     map.value.on('click', loadMapControlsOnce);
@@ -174,7 +188,7 @@ const initializeMassMarks = debounce(() => {
         url: 'https://webapi.amap.com/images/mass/mass0.png',
         anchor: new AMapInstance.value.Pixel(4, 4),
         size: new AMapInstance.value.Size(6, 6),
-        zIndex: 999,
+        zIndex: 111,
     };
 
     // 只渲染当前视野内的点
