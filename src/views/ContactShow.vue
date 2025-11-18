@@ -7,10 +7,11 @@
 
     <!-- 图表区域：展示轨迹分析（如时间-位置变化） -->
     <div class="LineChart">
-      <div>可以点击线段或输入时间查看某一时刻密接人员分布</div>
+      <div >可以点击蓝色折线或输入时间查看某一时刻密接人员分布</div>
       <!-- 新增时间输入框 -->
       <div class="time-input-container">
-        <input type="number" v-model="inputTime" class="time-input" placeholder="输入时间（0-599秒）" min="0" max="599"
+        
+        <input type="number" v-model="inputTime" class="time-input" placeholder="输入时间（0-600秒）" min="0" max="600"
           @keyup.enter="handleTimeInput">
         <button @click="handleTimeInput" class="time-input-btn">确认</button>
       </div>
@@ -31,7 +32,7 @@ import AllContactsData from '@/data/all_contacts.json';
 // 图表实例引用
 let chartInstance = ref < echarts.ECharts | null > (null);
 const mapComponent = ref(null);
-let currentTime = ref(0); // 存储当前选中的时间点
+let currentTime = ref(599); // 存储当前选中的时间点
 const inputTime = ref(''); // 输入框绑定的时间值
 
 // 处理时间输入
@@ -136,7 +137,7 @@ const initChart = () => {
       nameLocation: 'middle',
       nameGap: 30,
       min: 0, // 固定时间范围起点
-      max: 600, // 固定时间范围终点
+      max: 700, // 固定时间范围终点
       axisLabel: {
         interval: 100, // 控制x轴标签显示间隔，避免过于密集
         formatter: '{value}s'
@@ -158,7 +159,7 @@ const initChart = () => {
         data: seriesData,
         smooth: true,
         symbol: 'circle',
-        symbolSize: 6,
+        symbolSize: 4,
         lineStyle: {
           width: 2
         },
@@ -173,7 +174,7 @@ const initChart = () => {
           data: [{
             name: '当前时间',
             xAxis: currentTime.value,
-            yAxis: 0,
+            yAxis: timeContactData[currentTime.value] || 0,
             itemStyle: { color: 'red' }
           }],
           // 原点的 tooltip 配置（和折线点效果一致）
@@ -183,13 +184,38 @@ const initChart = () => {
               const time = params.data.xAxis;
               const count = params.data.yAxis;
               return `当前选中时间：${time} 秒<br/>密接次数：${count} 次`;
-            }
+            },
+            show: true
           },
-          label: { show: true }
+          label: {
+            formatter: function (params) {
+              const time = params.data.xAxis;
+              const count = params.data.yAxis;
+              return `当前选中时间：${time} 秒\n密接次数：${count} 次`;
+            },
+            show: true,
+            backgroundColor: 'rgba(255, 102, 102, 0.9)',
+            color: '#ffffff',
+            fontSize: 12,
+            fontWeight: 500,
+            padding: [10, 14],
+            borderRadius: 6,
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            borderWidth: 1,
+            shadowBlur: 4,
+            shadowColor: 'rgba(0, 0, 0, 0.15)',
+            shadowOffsetX: 1,
+            shadowOffsetY: 1,
+            lineHeight: 18,
+            position: 'top',
+
+            offset: [12, 0], // 右侧时偏移+12px，左侧时自动变为-12px（ECharts自动适配）
+          }
         }
       }
     ]
   };
+
 
   // 设置图表配置
   chartInstance.setOption(option);
@@ -260,7 +286,6 @@ onUnmounted(() => {
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  margin-left: 16px;
 }
 
 .LineChart {
@@ -272,7 +297,7 @@ onUnmounted(() => {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  margin-right: 16px;
+  text-align: center
 }
 
 .chart-header {
@@ -289,10 +314,10 @@ onUnmounted(() => {
 
 /* 新增时间输入框样式 */
 .time-input-container {
-  margin-bottom: 16px;
   display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 10px;
+  margin-right: 128px;
+  margin-left: 128px;
 }
 
 .time-input {

@@ -16,7 +16,7 @@ const coordinates = ref([]);
 // 存储动态加载的插件实例
 const dynamicPlugins = ref({});
 // 添加时间过滤相关变量
-const filterTime = ref(null);
+const filterTime = ref(599);
 
 // 防抖函数  核心作用是控制高频触发的函数在指定时间内只执行一次
 const debounce = (func, wait) => {
@@ -165,7 +165,8 @@ const loadAndProcessData = async () => {
                 // 确保每条数据都包含time字段
                 coordinates.value = e.data.map(item => ({
                     ...item,
-                    time: item.time || 0 // 假设原始数据中有time字段
+                    time: item.time || 0, // 假设原始数据中有time字段
+                    name: item.id1
                 }));
                 initializeMassMarks();
                 worker.terminate();
@@ -211,7 +212,7 @@ const getVisibleCoordinates = (data) => {
         const inBounds = bounds.contains(new AMapInstance.value.LngLat(lng, lat));
 
         // 时间可见性判断
-        const inTimeRange = !filterTime.value || item.time <= filterTime.value;
+        const inTimeRange =  (filterTime.value > 0 && filterTime.value <= 600) || item.time <= filterTime.value;
 
         return inBounds && inTimeRange;
     });
@@ -244,7 +245,7 @@ const loadMarksInBatches = (data, style) => {
         });
 
         const handleMouseOver = (e) => {
-            infoWindow.setContent(e.data.name);
+            infoWindow.setContent(`ID: ${e.data.name}`);
             infoWindow.open(map.value, e.data.lnglat);
         };
 
