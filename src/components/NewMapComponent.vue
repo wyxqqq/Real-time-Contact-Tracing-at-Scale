@@ -15,6 +15,8 @@ const overlays = ref([]);
 const coordinates = ref([]);
 // 存储动态加载的插件实例
 const dynamicPlugins = ref({});
+// 添加时间过滤相关变量
+const filterTime = ref(null);
 
 // 防抖函数  核心作用是控制高频触发的函数在指定时间内只执行一次
 const debounce = (func, wait) => {
@@ -142,36 +144,34 @@ const loadMapControlsOnce = debounce(async () => {
     map.value.off('click', loadMapControlsOnce);
 }, 300);
 
+// 添加接收过滤时间的方法
+const setFilterTime = (time) => {
+    filterTime.value = time;
+    handleViewChange(); // 触发重新渲染
+};
+
 /**
  * 异步加载并处理坐标数据（使用Web Worker）
  */
 const loadAndProcessData = async () => {
     try {
-        // 动态导入大JSON数据（避免初始打包体积过大）
         const { default: AllContactsData } = await import('@/data/all_contacts.json');
 
-        // 使用Web Worker处理大数据
         const worker = new Worker(new URL('@/workers/coordinateProcessor.js', import.meta.url));
 
         return new Promise((resolve) => {
             worker.postMessage({ data: AllContactsData });
             worker.onmessage = (e) => {
-                coordinates.value = e.data;
-                initializeMassMarks(); // 数据处理完成后初始化标记点
-                worker.terminate(); // 销毁Worker释放资源
-                resolve();
-            };
-            worker.onerror = (err) => {
-                console.error('Worker处理错误:', err);
-                worker.terminate();
-                // 降级处理：使用同步方式
-                coordinates.value = AllContactsData.map((item, i) => ({
-                    lnglat: item.coord,
-                    name: `点位${i}`
+                // 确保每条数据都包含time字段
+                coordinates.value = e.data.map(item => ({
+                    ...item,
+                    time: item.time || 0 // 假设原始数据中有time字段
                 }));
                 initializeMassMarks();
+                worker.terminate();
                 resolve();
             };
+            // ... 错误处理 ...
         });
     } catch (error) {
         console.error('数据加载失败:', error);
@@ -203,10 +203,17 @@ const initializeMassMarks = debounce(() => {
  */
 const getVisibleCoordinates = (data) => {
     if (!map.value) return data;
+
     const bounds = map.value.getBounds();
     return data.filter(item => {
+        // 坐标可见性判断
         const [lng, lat] = item.lnglat;
-        return bounds.contains(new AMapInstance.value.LngLat(lng, lat));
+        const inBounds = bounds.contains(new AMapInstance.value.LngLat(lng, lat));
+
+        // 时间可见性判断
+        const inTimeRange = !filterTime.value || item.time <= filterTime.value;
+
+        return inBounds && inTimeRange;
     });
 };
 
@@ -376,6 +383,10 @@ const cleanup = () => {
     }
 };
 
+
+
+
+
 // 组件生命周期
 onMounted(() => {
     nextTick(() => {
@@ -390,7 +401,8 @@ onUnmounted(() => {
 // 暴露方法给父组件
 defineExpose({
     addPolyline,
-    clearMassMarks
+    clearMassMarks,
+    setFilterTime // 新增：暴露时间过滤方法
 });
 </script>
 
