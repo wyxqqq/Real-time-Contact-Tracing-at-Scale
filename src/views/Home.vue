@@ -1,5 +1,7 @@
 <template>
   <div class="home">
+    <!-- 1. 地图背景容器 -->
+    <div class="map-background" id="Map" ref="MapRef"></div>
     <!-- 视频卡片容器1 -->
     <div class="video-card" @click="handleCardClick1">
       <!-- 封面区域 -->
@@ -41,6 +43,10 @@
 
 import * as echarts from 'echarts';
 import { onMounted, ref } from 'vue';
+// 导入济南市数据
+import jinanGeoData from '@/data/jinanGeo.json';
+// 导入济南市数据
+import jinanStreetGeoData from '@/data/jinanStreetGeo.json';
 
 
 const videoUrl1 = '/ContactSearch';
@@ -59,25 +65,98 @@ const handleCardClick2 = () => {
   window.location.href = videoUrl2;
 };
 
+// 初始化图表
+const initChart = () => {
+  const myChart = echarts.init(document.getElementById('Map'));
+
+        const jinanGeoJSON = jinanGeoData;
+        echarts.registerMap('jinan', jinanGeoJSON);
+
+        const jinanStreetGeoJSON = jinanStreetGeoData;
+        const streetData = jinanStreetGeoJSON.features.map(feature => ({
+            coords: feature.geometry.coordinates
+        }));
+
+        // 图表配置（透明地图和街道）
+        const option = {
+            animation: false,
+            backgroundColor: 'transparent',
+            geo: {
+                map: 'jinan',
+                roam: false, 
+                silent: false,
+                center: [117.09, 36.66], 
+                zoom: 3,
+                label: {
+                    show: true,
+                    color: 'rgba(51,51,51,0.7)',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    textShadow: '0 1px 2px rgba(255,255,255,0.5)'
+                },
+                itemStyle: {
+                    areaColor: 'transparent', 
+                    borderColor: 'rgba(66, 139, 202, 0.4)', 
+                    borderWidth: 1.5
+                },
+                emphasis: { disabled: true }, 
+                select: { disabled: true }, 
+                renderMode: 'canvas'
+            },
+            series: [
+                {
+                    type: 'lines',
+                    coordinateSystem: 'geo',
+                    data: streetData,
+                    z: -1, // 街道层级与地图一致，确保在上层内容之下
+                    lineStyle: {
+                        color: 'rgba(255, 99, 71, 0.4)', // 街道半透明
+                        width: 2,
+                        opacity: 0.4
+                    },
+                    animation: false,
+                    progressive: 0,
+                    animationDurationUpdate: 0,
+                    silent: true
+                }
+            ]
+        };
+
+        myChart.setOption(option);
+
+        window.addEventListener('resize', () => {
+            myChart.resize();
+        });
+
+};
+
+
+
 onMounted(() => {
-
+  initChart();
 })
-
-
 
 </script>
 
 <style scoped>
+/* 地图背景容器 */
+.map-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  /* 用视口宽度，避免滚动条影响 */
+  height: 100vh;
+  /* 用视口高度，确保全屏覆盖 */
+  z-index: -1;
+  background: transparent;
+}
+
 body {
   font-family: "Microsoft YaHei", sans-serif;
   background-color: #f9f9f9;
 }
 
-h1 {
-  text-align: center;
-  color: #333;
-  margin-top: 20px;
-}
 
 .home {
   display: flex;
@@ -90,7 +169,7 @@ h1 {
   min-height: calc(100vh - 60px);
   /* margin-top: 60px; */
   flex-wrap: wrap;
-  font-family: 微软雅黑;
+  /* font-family: 微软雅黑; */
   /* padding: 20px; 增加内边距 */
   /* background-color: #f5f7fa; */
   /* 浅灰背景 */

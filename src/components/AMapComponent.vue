@@ -47,7 +47,7 @@ const initMap = () => {
     .then((AMap) => {
       //创建路网图层
       var roadNet = new AMap.TileLayer.RoadNet({
-        zIndex: 999, // 路网层级（低于行政区边界，避免遮挡）
+        zIndex: 2, // 路网层级（低于行政区边界，避免遮挡）
         // 可选：自定义路网样式（颜色、宽度等）
         style: {
           'road-stroke': '#666', // 道路颜色（默认深灰，可调整）
@@ -61,8 +61,8 @@ const initMap = () => {
 
       //创建省市级行政地图
       var distProvince = new AMap.DistrictLayer.Province({
-        zIndex: 10, //设置图层层级
-        zooms: [1, 15], //设置图层显示范围
+        zIndex: 1, //设置图层层级
+        // zooms: [1, 15], //设置图层显示范围
         adcode: "370100", //设置行政区 adcode 济南adcode370100
         depth: 2, //设置数据显示层级，0：显示国家面，1：显示省级，当国家为中国时设置depth为2的可以显示市一级
         styles: {
@@ -76,7 +76,7 @@ const initMap = () => {
       map.value = new AMap.Map("amap-container", {
         // 设置地图容器id
         viewMode: "2D", // 是否为3D地图模式
-        zoom: 11, // 初始化地图级别
+        zoom: 13, // 初始化地图级别
         center: [117.00, 36.67], // 初始化地图中心点位置
         terrain: true, //开启地形图
         pitch: 50, //地图俯仰角度，有效范围 0 度- 83 度
@@ -84,7 +84,7 @@ const initMap = () => {
         pitchEnable: true, //是否开启地图倾斜交互 鼠标右键 + 鼠标上下移动或键盘Ctrl + 鼠标左键上下移动
         rotation: -15, //初始地图顺时针旋转的角度
         zooms: [1, 20], //地图显示的缩放级别范围
-        // showLabel: false,
+        showLabel: false,// 显示POI
         layers: [distProvince, roadNet],
         // 1. 新增：配置 Canvas 启用 willReadFrequently，解决性能提示
         renderer: 'canvas',
