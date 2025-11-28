@@ -65,11 +65,12 @@ nav {
   /* 启用flex布局 */
   align-items: center;
   /* 垂直居中 */
+  background-color: #EFF1FD;
 }
 
 /* 导航链接样式 */
 nav a {
-    background-color: #fff;
+    /* background-color: #fff; */
   /* 深紫蓝色，与粉蓝渐变协调 */
   color: #000000;
   /* 白色文字，确保清晰可读 */

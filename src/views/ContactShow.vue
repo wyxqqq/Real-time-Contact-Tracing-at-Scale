@@ -7,7 +7,7 @@
 
     <!-- 图表区域：展示轨迹分析（如时间-位置变化） -->
     <div class="LineChart">
-      <div >可以点击蓝色折线或输入时间查看某一时刻密接人员分布</div>
+      <div >可以点击蓝色折线或输入时间查看某一时刻密接事件分布</div>
       <!-- 新增时间输入框 -->
       <div class="time-input-container">
         
@@ -108,7 +108,7 @@ const initChart = () => {
   // 图表配置项
   const option = {
     title: {
-      text: '密接人员数量随时间变化',
+      text: '密接事件数量随时间变化',
       subtext: '时间范围：0~600秒',
       left: 'center'
     },

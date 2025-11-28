@@ -854,7 +854,6 @@ const toggleSelectAll = (event) => {
   flex-direction: row;
   flex-wrap: nowrap;
   background-color: #f5f7fa;
-  height: 100%;
 }
 
 /* 左侧地图区域 */
@@ -862,7 +861,7 @@ const toggleSelectAll = (event) => {
   flex: 1 1 70%;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  margin-right: 12px;
+  /* margin-right: 12px; */
 }
 
 /* 右侧搜索 / 列表面板 */
