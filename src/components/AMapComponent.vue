@@ -11,6 +11,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import AMapLoader from "@amap/amap-jsapi-loader";
 // 导入所有接触对结束时刻的位置数据
 import AllContactsData from '@/data/all_contacts.json';
+const emit = defineEmits(['region-hover-in', 'region-hover-out'])
 
 let map = ref(null);
 let markers = [];
@@ -150,6 +151,27 @@ const addPolyline = (path, options = {}) => {
     path: lngLatPath,
     ...polylineOptions
   });
+
+  // ⭐ 如果有 extData，就挂到 polyline 上，供悬停时识别是哪条区域
+  if (polylineOptions.extData) {
+    polyline.setExtData(polylineOptions.extData);
+  }
+
+  // ⭐ 给“带 regionType 的线”加悬停事件
+  polyline.on('mouseover', () => {
+    const data = polyline.getExtData && polyline.getExtData();
+    if (data && data.regionType) {
+      emit('region-hover-in', data);
+    }
+  });
+
+  polyline.on('mouseout', () => {
+    const data = polyline.getExtData && polyline.getExtData();
+    if (data && data.regionType) {
+      emit('region-hover-out', data);
+    }
+  });
+
 
   // 添加到地图
   map.value.add(polyline);
