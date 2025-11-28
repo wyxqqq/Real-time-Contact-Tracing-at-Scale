@@ -41,7 +41,7 @@ const initMap = () => {
     key: "c4238e9a0f79721313732696bc000ea7", // 申请好的Web端开发者Key，首次调用 load 时必填
     version: "2.0", // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
     plugins: ["AMap.Scale", "AMap.ToolBar", "AMap.PolygonEditor", "AMap.ControlBar",
-      "AMap.MouseTool", "AMap.PolyEditor", "AMap.PlaceSearch", 
+      "AMap.MouseTool", "AMap.PolyEditor", "AMap.PlaceSearch",
       "AMap.Geocoder", "AMap.DistrictLayer", "AMap.Polyline"],
     //需要使用的的插件列表，如比例尺'AMap.Scale'，支持添加多个如：['...','...']
   })
@@ -86,6 +86,7 @@ const initMap = () => {
         rotation: -15, //初始地图顺时针旋转的角度
         zooms: [1, 20], //地图显示的缩放级别范围
         showLabel: false,// 显示POI
+        animateEnable: true,  // 开启地图动画
         layers: [distProvince, roadNet],
         // 1. 新增：配置 Canvas 启用 willReadFrequently，解决性能提示
         renderer: 'canvas',
@@ -178,6 +179,12 @@ const addPolyline = (path, options = {}) => {
 
   // 加入覆盖物管理
   overlays.value.push(polyline);
+
+  // 延迟执行确保折线已完成渲染
+  setTimeout(() => {
+    // 让地图视图适配折线范围，第二个参数是边距（像素）
+    map.value.setFitView([polyline], 100);
+  }, 10);
 
   return polyline;
 };
