@@ -1,14 +1,52 @@
 <template>
   <div class="contact-tracing-container">
     <!-- 左侧地图 -->
-  <div class="map-container">
-    <AMapComponent
-      ref="mapComponent"
-      @region-hover-in="handleRegionHoverIn"
-      @region-hover-out="handleRegionHoverOut"
-    />
-  </div>
+    <div class="map-container">
+      <AMapComponent
+        ref="mapComponent"
+        @region-hover-in="handleRegionHoverIn"
+        @region-hover-out="handleRegionHoverOut"
+      />
 
+      <!-- 地图悬停信息框 -->
+      <div v-if="hoverTooltip.visible" class="map-tooltip">
+        <!-- 疑似-密接 区域 -->
+        <template v-if="hoverTooltip.kind === 'base-close'">
+          <div class="tooltip-row">
+            <span class="tooltip-label">疑似ID：</span>
+            <span class="tooltip-value">{{ hoverTooltip.baseId }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">密接ID：</span>
+            <span class="tooltip-value">{{ hoverTooltip.closeId }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">时间段：</span>
+            <span class="tooltip-value">
+              [{{ hoverTooltip.start }}，{{ hoverTooltip.end }}]
+            </span>
+          </div>
+        </template>
+
+        <!-- 密接-次密接 区域 -->
+        <template v-else-if="hoverTooltip.kind === 'close-secondary'">
+          <div class="tooltip-row">
+            <span class="tooltip-label">密接ID：</span>
+            <span class="tooltip-value">{{ hoverTooltip.closeId }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">次密接ID：</span>
+            <span class="tooltip-value">{{ hoverTooltip.secondaryId }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">时间段：</span>
+            <span class="tooltip-value">
+              [{{ hoverTooltip.start }}，{{ hoverTooltip.end }}]
+            </span>
+          </div>
+        </template>
+      </div>
+    </div>
 
     <!-- 右侧搜索 / 事件列表 -->
     <div class="contact-panel">
@@ -52,37 +90,54 @@
           暂无结果，请输入 ID 后搜索
         </div>
 
-        <!-- 事件卡（疑 / 密 / 次） -->
+        <!-- 事件卡（疑 / 密 / 次 / 无次密接提示） -->
         <div
           v-for="item in visibleResults"
-          :key="item.id + '-' + item.type + '-' + item.parentId"
+          :key="item.id + '-' + item.type + '-' + (item.parentId || 'root')"
           class="result-card"
           :data-type="item.type"
-          :class="[item.type, { hidden: !item.visualize, active: item.visualize, 'hover-card': item.id === hoveredRegionId }]"
+          :class="[
+            item.type,
+            {
+              hidden: item.type !== 'base' && item.type !== 'no-secondary' && !item.visualize,
+              active: item.visualize,
+              'hover-card': cardHoverKey(item) === hoveredRegionKey,
+              'no-secondary-card': item.type === 'no-secondary'
+            }
+          ]"
           @click="onCardClick(item)"
         >
-          <!-- 左侧主体：疑/密不缩进，次密接缩进 -->
+          <!-- 左侧主体：疑/密不缩进，次密接 + 无次密接提示缩进 -->
           <div
             class="result-main"
-            :style="{ paddingLeft: item.type === 'secondary' ? '24px' : '8px' }"
+            :style="{ paddingLeft: (item.type === 'secondary' || item.type === 'no-secondary') ? '24px' : '8px' }"
           >
-            <!-- 徽标：疑 / 密 / 次 -->
-            <span
-              v-if="item.type === 'base'"
-              class="badge badge-base"
-            >疑</span>
-            <span
-              v-else-if="item.type === 'close'"
-              class="badge badge-close"
-            >密</span>
-            <span
-              v-else
-              class="badge badge-secondary"
-            >次</span>
+            <!-- 无次密接提示卡片 -->
+            <template v-if="item.type === 'no-secondary'">
+              <span class="no-secondary-dot"></span>
+              <span class="no-secondary-text">该密接暂无次密接记录</span>
+            </template>
 
-            <span class="id-text">
-              ID：{{ item.id }}
-            </span>
+            <!-- 正常的 疑 / 密 / 次 卡片 -->
+            <template v-else>
+              <!-- 徽标 -->
+              <span
+                v-if="item.type === 'base'"
+                class="badge badge-base"
+              >疑</span>
+              <span
+                v-else-if="item.type === 'close'"
+                class="badge badge-close"
+              >密</span>
+              <span
+                v-else
+                class="badge badge-secondary"
+              >次</span>
+
+              <span class="id-text">
+                ID：{{ item.id }}
+              </span>
+            </template>
           </div>
 
           <!-- 右侧展开键：仅密接有，控制密接“完整路径”的显示/隐藏 -->
@@ -90,8 +145,39 @@
             v-if="item.type === 'close'"
             class="expand-btn"
             @click.stop="toggleExpand(item)"
+            :aria-label="item.expanded ? '收起次密接' : '展开次密接'"
           >
-            {{ item.expanded ? '收起' : '展开' }}
+            <!-- 折叠：向右 60° 锐角箭头 -->
+            <svg
+              v-if="!item.expanded"
+              class="arrow-icon"
+              viewBox="0 0 1024 1024"
+            >
+              <polyline
+                points="360,256 640,512 360,768"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="80"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+
+            <!-- 展开：向下 60° 锐角箭头 -->
+            <svg
+              v-else
+              class="arrow-icon"
+              viewBox="0 0 1024 1024"
+            >
+              <polyline
+                points="256,360 512,640 768,360"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="80"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </button>
         </div>
       </div>
@@ -117,17 +203,6 @@ const selectAll = ref(false)
 
 /**
  * 搜索结果列表（完整“疑-密-次”结构）
- * 每条结构：
- * {
- *   id: string,
- *   type: 'base' | 'close' | 'secondary',
- *   parentId: string | null,
- *   visualize: boolean,
- *   expanded: boolean,
- *   locations: Array<{time: string, lng: number, lat: number}>,
- *   contactStart?: string,
- *   contactEnd?: string
- * }
  */
 const results = ref([])
 
@@ -148,7 +223,6 @@ const API_BASE = 'http://39.96.159.110:8080'
 
 /**
  * polyline 样式
- * 采用极高 zIndex + 加粗方案，确保路线压住底图道路
  */
 const STYLE_BASE_FULL = {
   strokeColor: '#e74645',
@@ -164,7 +238,7 @@ const STYLE_BASE_FULL = {
 }
 
 const STYLE_CLOSE_FULL = {
-  strokeColor: '#e645be',
+  strokeColor: '#fb7756',
   strokeWeight: 10,
   strokeOpacity: 0.7,
   isOutline: true,
@@ -177,8 +251,8 @@ const STYLE_CLOSE_FULL = {
 }
 
 const STYLE_REGION_BASE_CLOSE = {
-  strokeColor: '#ffff00',
-  strokeWeight: 15,
+  strokeColor: '#facd60',
+  strokeWeight: 13,
   strokeOpacity: 0.45,
   isOutline: true,
   outlineColor: '#000000',
@@ -191,7 +265,7 @@ const STYLE_REGION_BASE_CLOSE = {
 
 const STYLE_REGION_CLOSE_SECONDARY = {
   strokeColor: '#1ac0c6',
-  strokeWeight: 15,
+  strokeWeight: 13,
   strokeOpacity: 0.45,
   isOutline: true,
   outlineColor: '#000000',
@@ -202,21 +276,43 @@ const STYLE_REGION_CLOSE_SECONDARY = {
   zIndex: 999993
 }
 
-
 /** polyline 引用（用于 show/hide） */
 const baseFullPolyline = ref(null)              // 疑似完整路径
 const closeFullPolylines = new Map()            // key: 密接ID → polyline
 const regionBaseClosePolylines = new Map()      // key: 密接ID → polyline（疑似-密接区域）
-const regionCloseSecondaryPolylines = new Map() // key: 次密接ID → polyline（密接-次密接区域）
+// 二元主键：`${closeId}__${secId}` → polyline（密接-次密接区域）
+const regionCloseSecondaryPolylines = new Map()
 
-// 当前悬停的区域对应的条目 ID（密接或次密接）
-const hoveredRegionId = ref(null)
+// 当前悬停的区域对应的“逻辑主键”
+// - base-close：'close:<closeId>'
+// - close-secondary：'sec:<closeId>__<secId>'
+const hoveredRegionKey = ref(null)
 
-// 正在闪烁的密接完整路径：key = 密接ID → { timerId, originalExpanded }
-const closeBlinkTimers = new Map()
+/**
+ * 悬停信息框内容
+ * kind: 'base-close' | 'close-secondary'
+ */
+const hoverTooltip = ref({
+  visible: false,
+  kind: null,
+  baseId: '',
+  closeId: '',
+  secondaryId: '',
+  start: '',
+  end: ''
+})
+
+/**
+ * 记录“因为悬停而临时显示”的密接完整路径：
+ * key: closeId → true
+ * 逻辑：
+ *  - 如果该密接原本 expanded = false，则悬停时淡淡显示其完整路径
+ *  - 移出悬停时再隐藏回去
+ */
+const hoverTempCloseFull = new Map()
 
 /** 工具：清空所有已绘制的折线 */
-function clearAllPolylines() {
+function clearAllPolylines () {
   if (baseFullPolyline.value) {
     baseFullPolyline.value.setMap(null)
     baseFullPolyline.value = null
@@ -236,37 +332,35 @@ function clearAllPolylines() {
   }
   regionCloseSecondaryPolylines.clear()
 
-  // 停止所有闪烁定时器并重置悬停状态
-  closeBlinkTimers.forEach(({ timerId }) => clearInterval(timerId))
-  closeBlinkTimers.clear()
-  hoveredRegionId.value = null
+  hoverTempCloseFull.clear()
+  hoveredRegionKey.value = null
+  hoverTooltip.value = {
+    visible: false,
+    kind: null,
+    baseId: '',
+    closeId: '',
+    secondaryId: '',
+    start: '',
+    end: ''
+  }
 }
 
 /** 工具：{lng,lat}[] with time → [[lng,lat], ...] */
-function toPath(locations = []) {
+function toPath (locations = []) {
   return locations.map((p) => [p.lng, p.lat])
 }
 
 /** 把 time / start_time / end_time 转成 0-600 的数字（或 NaN） */
-function toNumTime(t) {
+function toNumTime (t) {
   if (t === null || t === undefined) return NaN
   const n = Number(t)
   return Number.isFinite(n) ? n : NaN
 }
 
 /**
- * 区域路径切片（严格按时间段，不扩展）：
- * 区域路径 = trace 中所有 time ∈ [start, end] 的点
- */
-/**
  * 在统一时间轴 0–600 上，按 [start, end] 直接裁剪轨迹
- * 
- * trace: [{ time: number|string, lng, lat }, ...]  // time 在 0–600 上
- * startTime, endTime: 后端给的 start_time / end_time（0–600）
- *
- * 逻辑：区域路径 = 所有满足 start <= time <= end 的点
  */
-function sliceTraceByTime(trace, startTime, endTime) {
+function sliceTraceByTime (trace, startTime, endTime) {
   if (!trace || trace.length === 0) return []
 
   const s = toNumTime(startTime)
@@ -282,19 +376,15 @@ function sliceTraceByTime(trace, startTime, endTime) {
     return Number.isFinite(t) && t >= lo && t <= hi
   })
 
-  // 不足 2 个点，高德没法画折线
   if (sliced.length < 2) return []
-
   return sliced
 }
 
-
 /**
- * 调用 /api/tracing/:id1，转换为“疑/密/次”结构
- * 同时保证：对于同一个疑似 id1，
- *   所有密接 id2 不能再作为任何 id3（次密接）出现
+ * 调用 /api/tracing/:id1，转换为“疑 / 密 / 次”结构
+ *（这里是你之前确认过的只保留第一次密接时间段的逻辑）
  */
-async function fetchContactGraphFromApi(baseId) {
+async function fetchContactGraphFromApi (baseId) {
   const url = `${API_BASE}/api/tracing/${encodeURIComponent(baseId)}`
   const resp = await fetch(url)
 
@@ -314,7 +404,7 @@ async function fetchContactGraphFromApi(baseId) {
 
   const items = []
 
-  // 疑似病例
+  // 疑似
   items.push({
     id: baseIdStr,
     type: 'base',
@@ -326,13 +416,84 @@ async function fetchContactGraphFromApi(baseId) {
 
   const contacts = Array.isArray(data.contacts) ? data.contacts : []
 
-  // 收集所有密接 id2，用于过滤“次密接里重复出现的密接”
-  const closeIdSet = new Set(
-    contacts.map((c) => String(c.id2))
-  )
+  // 1) 为每个密接 id2 选“第一次密接”时间段
+  const closeBestMap = new Map()
+  const closeOrder = []
 
   contacts.forEach((c) => {
     const closeIdStr = String(c.id2)
+    const startNum = toNumTime(c.start_time)
+
+    if (!closeBestMap.has(closeIdStr)) {
+      closeOrder.push(closeIdStr)
+      closeBestMap.set(closeIdStr, {
+        contactStart: c.start_time,
+        contactEnd: c.end_time,
+        startNum
+      })
+    } else {
+      const prev = closeBestMap.get(closeIdStr)
+      if (
+        Number.isFinite(startNum) &&
+        (!Number.isFinite(prev.startNum) || startNum < prev.startNum)
+      ) {
+        closeBestMap.set(closeIdStr, {
+          contactStart: c.start_time,
+          contactEnd: c.end_time,
+          startNum
+        })
+      }
+    }
+  })
+
+  const closeIdSet = new Set(closeBestMap.keys())
+
+  // 2) 为每个 (id2, id3) 选“第一次密接”时间段
+  const secBestMap = new Map()
+  const secOrder = []
+
+  contacts.forEach((c) => {
+    const closeIdStr = String(c.id2)
+    const secArr = Array.isArray(c.id3_contacts) ? c.id3_contacts : []
+
+    secArr.forEach((sec) => {
+      const secIdStr = String(sec.id3)
+      const key = `${closeIdStr}__${secIdStr}`
+      const startNum = toNumTime(sec.start_time)
+
+      if (!secBestMap.has(key)) {
+        secOrder.push(key)
+        secBestMap.set(key, {
+          closeIdStr,
+          secIdStr,
+          contactStart: sec.start_time,
+          contactEnd: sec.end_time,
+          startNum
+        })
+      } else {
+        const prev = secBestMap.get(key)
+        if (
+          Number.isFinite(startNum) &&
+          (!Number.isFinite(prev.startNum) || startNum < prev.startNum)
+        ) {
+          secBestMap.set(key, {
+            closeIdStr,
+            secIdStr,
+            contactStart: sec.start_time,
+            contactEnd: sec.end_time,
+            startNum
+          })
+        }
+      }
+    })
+  })
+
+  // 3) 生成 items
+
+  // 密接
+  closeOrder.forEach((closeIdStr) => {
+    const info = closeBestMap.get(closeIdStr)
+    if (!info) return
 
     items.push({
       id: closeIdStr,
@@ -341,41 +502,38 @@ async function fetchContactGraphFromApi(baseId) {
       visualize: false,
       expanded: false,
       locations: [],
-      contactStart: c.start_time,
-      contactEnd: c.end_time
+      contactStart: info.contactStart,
+      contactEnd: info.contactEnd
     })
+  })
 
-    const secArr = Array.isArray(c.id3_contacts)
-      ? c.id3_contacts
-      : []
+  // 次密接
+  secOrder.forEach((key) => {
+    const info = secBestMap.get(key)
+    if (!info) return
+    const { closeIdStr, secIdStr, contactStart, contactEnd } = info
 
-    secArr.forEach((sec) => {
-      const secIdStr = String(sec.id3)
+    if (closeIdSet.has(secIdStr)) {
+      return
+    }
 
-      // 如果这个人已经是密接，就不再作为次密接挂在其他人下面
-      if (closeIdSet.has(secIdStr)) {
-        return
-      }
-
-      items.push({
-        id: secIdStr,
-        type: 'secondary',
-        parentId: closeIdStr,
-        visualize: false,
-        expanded: false,
-        locations: [],
-        contactStart: sec.start_time,
-        contactEnd: sec.end_time
-      })
+    items.push({
+      id: secIdStr,
+      type: 'secondary',
+      parentId: closeIdStr,
+      visualize: false,
+      expanded: false,
+      locations: [],
+      contactStart,
+      contactEnd
     })
   })
 
   return items
 }
 
-
 /** /api/trace/:id → 带时间的完整轨迹 */
-async function fetchTraceFromApi(id) {
+async function fetchTraceFromApi (id) {
   const url = `${API_BASE}/api/trace/${encodeURIComponent(id)}`
   const resp = await fetch(url)
   if (!resp.ok) {
@@ -394,13 +552,13 @@ async function fetchTraceFromApi(id) {
 }
 
 /**
- * 一次性绘制所有路线：
- * - 疑似完整路径（红）
- * - 密接完整路径（紫）
- * - 疑似-密接区域路径（黄）
- * - 密接-次密接区域路径（青）
+ * 绘制所有路线：
+ * - 疑似完整（红）
+ * - 密接完整（橙）
+ * - 疑似-密接区域（黄）
+ * - 密接-次密接区域（青）
  */
-function initPolylinesForCurrentData() {
+function initPolylinesForCurrentData () {
   if (!mapComponent.value) return
 
   clearAllPolylines()
@@ -418,7 +576,7 @@ function initPolylinesForCurrentData() {
     }
   }
 
-  // 密接完整路径：紫色，默认按 expanded 显示/隐藏
+  // 密接完整路径
   const closes = all.filter((r) => r.type === 'close')
   closes.forEach((close) => {
     if (close.locations && close.locations.length >= 2) {
@@ -435,7 +593,7 @@ function initPolylinesForCurrentData() {
     }
   })
 
-  // 疑似-密接：区域路径（黄）在“疑似轨迹”上截子段
+  // 疑似-密接 区域路径（黄）
   if (base && base.locations && base.locations.length >= 2) {
     closes.forEach((close) => {
       if (
@@ -471,7 +629,7 @@ function initPolylinesForCurrentData() {
     })
   }
 
-  // 次密接：密接-次密接区域路径（在“密接轨迹”上截子段）
+  // 密接-次密接 区域路径（青）
   const seconds = all.filter((r) => r.type === 'secondary')
   seconds.forEach((sec) => {
     if (!sec.contactStart || !sec.contactEnd) return
@@ -487,6 +645,8 @@ function initPolylinesForCurrentData() {
     if (regionPoints.length < 2) return
 
     const regionPath = toPath(regionPoints)
+    const key = `${parentClose.id}__${sec.id}`
+
     const poly = mapComponent.value.addPolyline(
       regionPath,
       {
@@ -494,29 +654,22 @@ function initPolylinesForCurrentData() {
         extData: {
           regionType: 'close-secondary',
           id: sec.id,
-          closeId: parentClose.id
+          closeId: parentClose.id,
+          key
         }
       }
     )
     if (poly) {
       poly.hide()
-      regionCloseSecondaryPolylines.set(sec.id, poly)
+      regionCloseSecondaryPolylines.set(key, poly)
     }
   })
 }
 
-/**
- * 悬停效果：区域路径 + 右侧卡片 + 密接完整路径闪烁
- */
-
-/** 根据区域类型设置 hover 样式 */
-function setRegionHoverStyle(polyline, regionType, isHover) {
+/** 根据区域类型设置 hover 样式（这里只用于 base-close） */
+function setRegionHoverStyle (polyline, regionType, isHover) {
   if (!polyline) return
-
-  const baseStyle =
-    regionType === 'base-close'
-      ? STYLE_REGION_BASE_CLOSE
-      : STYLE_REGION_CLOSE_SECONDARY
+  const baseStyle = STYLE_REGION_BASE_CLOSE
 
   if (!isHover) {
     polyline.setOptions(baseStyle)
@@ -531,97 +684,143 @@ function setRegionHoverStyle(polyline, regionType, isHover) {
   polyline.setOptions(hoverStyle)
 }
 
+/** 卡片的“悬停 key”，用于和 hoveredRegionKey 对比 */
+function cardHoverKey (item) {
+  if (item.type === 'close') {
+    return `close:${item.id}`
+  }
+  if (item.type === 'secondary') {
+    return `sec:${item.parentId}__${item.id}`
+  }
+  return null
+}
+
 /**
  * 地图发来的“区域路径悬停进入”事件
- * payload 结构由 AMapComponent.extData 决定：
- * { regionType: 'base-close' | 'close-secondary', id: string, baseId?: string, closeId?: string }
+ * base-close:
+ *   { regionType:'base-close', id: closeId, baseId }
+ * close-secondary:
+ *   { regionType:'close-secondary', id: secId, closeId, key }
  */
-function handleRegionHoverIn(payload) {
-  const { regionType, id, closeId } = payload || {}
+function handleRegionHoverIn (payload) {
+  const { regionType, id, closeId, baseId, key } = payload || {}
   if (!regionType || !id) return
 
-  // 高亮右侧对应卡片
-  hoveredRegionId.value = id
-
-  // 找到对应区域 polyline
-  let regionPolyline = null
+  // 右侧卡片高亮 & tooltip 内容
   if (regionType === 'base-close') {
-    regionPolyline = regionBaseClosePolylines.get(id)
+    hoveredRegionKey.value = `close:${id}`
   } else if (regionType === 'close-secondary') {
-    regionPolyline = regionCloseSecondaryPolylines.get(id)
+    const compositeKey = key || `${closeId}__${id}`
+    hoveredRegionKey.value = `sec:${compositeKey}`
   }
-  setRegionHoverStyle(regionPolyline, regionType, true)
 
-  // 闪烁逻辑：只对密接完整路径生效
-  const closeIdForFull = regionType === 'base-close' ? id : closeId
-  if (!closeIdForFull) return
-
-  const closeItem = results.value.find(
-    (r) => r.type === 'close' && r.id === closeIdForFull
-  )
-  const fullPolyline = closeFullPolylines.get(closeIdForFull)
-
-  if (!closeItem || !fullPolyline) return
-
-  // 如果密接完整路径当前是“显示”（expanded = true），则不闪烁
-  if (closeItem.expanded) return
-
-  // 已经在闪烁中，不重复开启
-  if (closeBlinkTimers.has(closeIdForFull)) return
-
-  const originalExpanded = closeItem.expanded
-
-  // 先显示一次，再开始闪烁
-  fullPolyline.show()
-
-  const timerId = setInterval(() => {
-    if (fullPolyline.getMap()) {
-      fullPolyline.hide()
-    } else {
-      fullPolyline.show()
+  // 设置 tooltip 内容
+  const all = results.value
+  if (regionType === 'base-close') {
+    const baseItem = all.find((r) => r.type === 'base')
+    const closeItem = all.find((r) => r.type === 'close' && r.id === id)
+    if (baseItem && closeItem) {
+      hoverTooltip.value = {
+        visible: true,
+        kind: 'base-close',
+        baseId: baseItem.id,
+        closeId: closeItem.id,
+        secondaryId: '',
+        start: closeItem.contactStart ?? '',
+        end: closeItem.contactEnd ?? ''
+      }
     }
-  }, 1000)
+  } else if (regionType === 'close-secondary') {
+    const compositeKey = key || `${closeId}__${id}`
+    const secItem = all.find(
+      (r) => r.type === 'secondary' && r.id === id && r.parentId === closeId
+    )
+    if (secItem) {
+      hoverTooltip.value = {
+        visible: true,
+        kind: 'close-secondary',
+        baseId: '',
+        closeId,
+        secondaryId: secItem.id,
+        start: secItem.contactStart ?? '',
+        end: secItem.contactEnd ?? ''
+      }
+    }
+  }
 
-  closeBlinkTimers.set(closeIdForFull, {
-    timerId,
-    originalExpanded
-  })
+  // 地图上的操作：
+  //  1) base-close：高亮区域 + 对应密接完整路径淡淡显示（如果原本是隐藏状态）
+  //  2) close-secondary：不改任何路径，只做 UI 提示
+
+  if (regionType === 'base-close') {
+    const regionPolyline = regionBaseClosePolylines.get(id)
+    setRegionHoverStyle(regionPolyline, regionType, true)
+
+    const closeIdForFull = id
+    const closeItem = results.value.find(
+      (r) => r.type === 'close' && r.id === closeIdForFull
+    )
+    const fullPolyline = closeFullPolylines.get(closeIdForFull)
+
+    if (!closeItem || !fullPolyline) return
+
+    // 如果该密接的完整路径当前是隐藏（expanded = false），则悬停时以低透明度显示
+    if (!closeItem.expanded) {
+      // 避免重复标记
+      if (!hoverTempCloseFull.has(closeIdForFull)) {
+        hoverTempCloseFull.set(closeIdForFull, true)
+        fullPolyline.setOptions({
+          ...STYLE_CLOSE_FULL,
+          strokeOpacity: 0.3
+        })
+        fullPolyline.show()
+      }
+    }
+  } else if (regionType === 'close-secondary') {
+    // 按你的要求：密接-次密接 区域不触发地图路径变化
+    return
+  }
 }
 
 /** 地图发来的“区域路径悬停离开”事件 */
-function handleRegionHoverOut(payload) {
-  const { regionType, id, closeId } = payload || {}
+function handleRegionHoverOut (payload) {
+  const { regionType, id, closeId, key } = payload || {}
   if (!regionType || !id) return
 
-  // 取消右侧卡片高亮
-  if (hoveredRegionId.value === id) {
-    hoveredRegionId.value = null
-  }
+  let regionKey = null
 
-  // 恢复区域线样式
-  let regionPolyline = null
   if (regionType === 'base-close') {
-    regionPolyline = regionBaseClosePolylines.get(id)
+    regionKey = `close:${id}`
+    const regionPolyline = regionBaseClosePolylines.get(id)
+    setRegionHoverStyle(regionPolyline, regionType, false)
   } else if (regionType === 'close-secondary') {
-    regionPolyline = regionCloseSecondaryPolylines.get(id)
+    const compositeKey = key || `${closeId}__${id}`
+    regionKey = `sec:${compositeKey}`
+    // 不改区域线样式
   }
-  setRegionHoverStyle(regionPolyline, regionType, false)
 
-  // 停止密接完整路径闪烁，恢复原始状态
-  const closeIdForFull = regionType === 'base-close' ? id : closeId
-  if (!closeIdForFull) return
+  if (hoveredRegionKey.value === regionKey) {
+    hoveredRegionKey.value = null
+  }
 
-  const info = closeBlinkTimers.get(closeIdForFull)
-  const fullPolyline = closeFullPolylines.get(closeIdForFull)
+  // tooltip 关闭
+  hoverTooltip.value.visible = false
 
-  if (info) {
-    clearInterval(info.timerId)
-    closeBlinkTimers.delete(closeIdForFull)
+  // 恢复密接完整路径（只对 base-close 生效）
+  if (regionType === 'base-close') {
+    const closeIdForFull = id
+    const isTempShown = hoverTempCloseFull.get(closeIdForFull)
+    const fullPolyline = closeFullPolylines.get(closeIdForFull)
+    const closeItem = results.value.find(
+      (r) => r.type === 'close' && r.id === closeIdForFull
+    )
 
-    if (fullPolyline) {
-      if (info.originalExpanded) {
-        fullPolyline.show()
-      } else {
+    if (isTempShown && fullPolyline && closeItem) {
+      hoverTempCloseFull.delete(closeIdForFull)
+      // 恢复默认样式
+      fullPolyline.setOptions(STYLE_CLOSE_FULL)
+      // 如果原本是隐藏状态，移出悬停后继续隐藏
+      if (!closeItem.expanded) {
         fullPolyline.hide()
       }
     }
@@ -630,7 +829,7 @@ function handleRegionHoverOut(payload) {
 
 /**
  * 排序后的结果展示：
- * 主疑 → 按顺序的密接 → 它展开时的次密接
+ * 主疑 → 按顺序的密接 → 它展开时的次密接（如果没有次密接，则插入“无次密接”提示框）
  */
 const visibleResults = computed(() => {
   const all = results.value
@@ -640,14 +839,26 @@ const visibleResults = computed(() => {
   if (base) ordered.push(base)
 
   const closeList = all.filter((item) => item.type === 'close')
+  const secondaryList = all.filter((item) => item.type === 'secondary')
+
   closeList.forEach((close) => {
     ordered.push(close)
 
     if (close.expanded) {
-      const children = all.filter(
-        (sec) => sec.type === 'secondary' && sec.parentId === close.id
+      const children = secondaryList.filter(
+        (sec) => sec.parentId === close.id
       )
-      ordered.push(...children)
+
+      if (children.length > 0) {
+        ordered.push(...children)
+      } else {
+        ordered.push({
+          id: `no-secondary-${close.id}`,
+          type: 'no-secondary',
+          parentId: close.id,
+          visualize: true
+        })
+      }
     }
   })
 
@@ -671,10 +882,7 @@ const toggleableCount = computed(() => {
 })
 
 /**
- * 输入并搜索：
- * - 空输入：清空结果 + 清空地图
- * - 非法输入：提示
- * - 合法 ID：调用接口，填充 results + 绘制路线
+ * 搜索
  */
 const handleSearch = async () => {
   const kw = personId.value.trim()
@@ -688,9 +896,9 @@ const handleSearch = async () => {
   }
   const idNum = Number(kw)
   const isIntId =
-    /^\d+$/.test(kw) &&            // 全是数字
-    Number.isFinite(idNum) &&      // 有限数
-    idNum >= 0 && idNum <= 99999   // 范围 0~99999
+    /^\d+$/.test(kw) &&
+    Number.isFinite(idNum) &&
+    idNum >= 0 && idNum <= 99999
 
   if (!isIntId) {
     alert('ID 必须为 0~99999 的整数，请检查输入')
@@ -699,7 +907,6 @@ const handleSearch = async () => {
 
   loading.value = true
   try {
-    // 1）根据 id 查询“疑-密-次”关系
     const items = await fetchContactGraphFromApi(kw)
 
     if (!items || items.length === 0) {
@@ -709,7 +916,6 @@ const handleSearch = async () => {
       return
     }
 
-    // 2）查询每个人的完整轨迹
     const base = items.find((r) => r.type === 'base')
     const closes = items.filter((r) => r.type === 'close')
 
@@ -723,9 +929,6 @@ const handleSearch = async () => {
       })
     )
 
-    // 初始化可视状态：
-    // - 疑似：可视 + 展开
-    // - 密接、次密接：默认不可视 + 不展开
     items.forEach((it) => {
       if (it.type === 'base') {
         it.visualize = true
@@ -738,16 +941,12 @@ const handleSearch = async () => {
 
     results.value = items
 
-    // 同步全选状态（密接是否全部可视）
     const closeList = results.value.filter((r) => r.type === 'close')
     selectAll.value =
       closeList.length > 0 &&
       closeList.every((r) => r.visualize)
 
-    // 绘制所有路线
     initPolylinesForCurrentData()
-
-    // 通知外部（如果有需要）
     emit('search', { id: kw, results: results.value })
   } catch (err) {
     console.error(err)
@@ -764,10 +963,11 @@ const handleSearch = async () => {
  * 点击卡片：
  * - base：不做任何事情
  * - close：切换“疑似-密接区域路径（黄）”显隐
- * - secondary：切换“密接-次密接区域路径（青）”显隐
+ * - secondary：切换“密接-次密接区域路径（青）”显隐（按二元主键）
+ * - no-secondary：纯提示卡片，不做任何动作
  */
 const onCardClick = (item) => {
-  if (item.type === 'base') return
+  if (item.type === 'base' || item.type === 'no-secondary') return
 
   const wasVisible = item.visualize
   item.visualize = !item.visualize
@@ -782,7 +982,8 @@ const onCardClick = (item) => {
       }
     }
   } else if (item.type === 'secondary') {
-    const region = regionCloseSecondaryPolylines.get(item.id)
+    const key = `${item.parentId}__${item.id}`
+    const region = regionCloseSecondaryPolylines.get(key)
     if (region) {
       if (!wasVisible && item.visualize) {
         region.show()
@@ -793,17 +994,9 @@ const onCardClick = (item) => {
   }
 }
 
-/** 同步全选状态：只有所有密接都可视时，全选才勾上 */
-const syncSelectAllState = () => {
-  const list = results.value.filter((r) => r.type === 'close')
-  selectAll.value =
-    list.length > 0 && list.every((r) => r.visualize)
-}
-
 /**
  * 密接卡片右侧“展开/收起”按钮：
- * - 只控制密接完整路径（紫色）显隐
- * - 次密接区域不受影响
+ * 只控制密接完整路径显隐
  */
 const toggleExpand = (item) => {
   if (item.type !== 'close') return
@@ -858,10 +1051,44 @@ const toggleSelectAll = (event) => {
 
 /* 左侧地图区域 */
 .map-container {
+  position: relative;
   flex: 1 1 70%;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  /* margin-right: 12px; */
+  margin-right: 12px;
+}
+
+/* 悬停信息框 */
+.map-tooltip {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+  max-width: 220px;
+  pointer-events: none;
+}
+
+.tooltip-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 2px;
+}
+
+.tooltip-row:last-child {
+  margin-bottom: 0;
+}
+
+.tooltip-label {
+  color: #666;
+  min-width: 70px;
+}
+
+.tooltip-value {
+  color: #222;
 }
 
 /* 右侧搜索 / 列表面板 */
@@ -929,7 +1156,7 @@ const toggleSelectAll = (event) => {
   cursor: pointer;
 }
 
-.select-all input[type="checkbox"] {
+.select-all input[type='checkbox'] {
   width: 16px;
   height: 16px;
 }
@@ -984,7 +1211,11 @@ const toggleSelectAll = (event) => {
   background: #fafafa;
   border: 1px solid #efefef;
   border-radius: 10px;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s,
+    opacity 0.2s;
   cursor: pointer;
 }
 
@@ -1002,6 +1233,14 @@ const toggleSelectAll = (event) => {
   background: #e6f4ff;
   border-color: #1677ff;
   box-shadow: 0 0 0 1px rgba(22, 119, 255, 0.4);
+}
+
+/* “无次密接”提示卡片 */
+.result-card.no-secondary-card {
+  background: #fcfcfc;
+  border-style: dashed;
+  border-color: #ddd;
+  cursor: default;
 }
 
 /* 左侧主体部分 */
@@ -1041,18 +1280,40 @@ const toggleSelectAll = (event) => {
   color: #333;
 }
 
-/* 展开按钮（密接） */
+/* 展开按钮（密接）：60° 锐角小箭头，放大一倍 */
 .expand-btn {
   border: none;
   background: transparent;
-  color: #1677ff;
   cursor: pointer;
-  font-size: 13px;
-  white-space: nowrap;
-  padding: 2px 4px;
-}
-.expand-btn:hover {
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #1677ff;
+}
+
+.expand-btn:hover {
+  color: #0958d9;
+}
+
+/* SVG 箭头尺寸（放大一倍） */
+.arrow-icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* “无次密接”提示内容 */
+.no-secondary-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #bbb;
+}
+.no-secondary-text {
+  font-size: 13px;
+  color: #888;
 }
 
 /* 底部加载状态 */
