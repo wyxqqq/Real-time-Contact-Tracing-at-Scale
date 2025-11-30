@@ -90,7 +90,7 @@
           暂无结果，请输入 ID 后搜索
         </div>
 
-        <!-- 事件卡（疑 / 密 / 次 / 无次密接提示） -->
+        <!-- 事件卡（疑 / 密 / 次 / 无次密接/无密接 提示） -->
         <div
           v-for="item in visibleResults"
           :key="item.id + '-' + item.type + '-' + (item.parentId || 'root')"
@@ -107,15 +107,17 @@
           ]"
           @click="onCardClick(item)"
         >
-          <!-- 左侧主体：疑/密不缩进，次密接 + 无次密接提示缩进 -->
+          <!-- 左侧主体：疑/密不缩进，次密接 + 无次密接/无密接 提示缩进 -->
           <div
             class="result-main"
             :style="{ paddingLeft: (item.type === 'secondary' || item.type === 'no-secondary') ? '24px' : '8px' }"
           >
-            <!-- 无次密接提示卡片 -->
+            <!-- 无次密接 / 无密接 提示卡片 -->
             <template v-if="item.type === 'no-secondary'">
               <span class="no-secondary-dot"></span>
-              <span class="no-secondary-text">该密接暂无次密接记录</span>
+              <span class="no-secondary-text">
+                {{ item.message || '该密接暂无次密接记录' }}
+              </span>
             </template>
 
             <!-- 正常的 疑 / 密 / 次 卡片 -->
@@ -224,8 +226,9 @@ const API_BASE = 'http://39.96.159.110:8080'
 /**
  * polyline 样式
  */
+/** 1. 疑似病例完整路径（深红） */
 const STYLE_BASE_FULL = {
-  strokeColor: '#e74645',
+  strokeColor: '#ff0000',   // ← 新颜色
   strokeWeight: 12,
   strokeOpacity: 0.9,
   isOutline: true,
@@ -237,8 +240,9 @@ const STYLE_BASE_FULL = {
   zIndex: 999990
 }
 
+/** 2. 密接完整路径（紫红） */
 const STYLE_CLOSE_FULL = {
-  strokeColor: '#fb7756',
+  strokeColor: '#b30086',   // ← 新颜色
   strokeWeight: 10,
   strokeOpacity: 0.7,
   isOutline: true,
@@ -250,8 +254,9 @@ const STYLE_CLOSE_FULL = {
   zIndex: 999991
 }
 
+/** 3. 疑似-密接 区域路径（蓝） */
 const STYLE_REGION_BASE_CLOSE = {
-  strokeColor: '#facd60',
+  strokeColor: '#164beb',   // ← 新颜色
   strokeWeight: 13,
   strokeOpacity: 0.45,
   isOutline: true,
@@ -263,8 +268,9 @@ const STYLE_REGION_BASE_CLOSE = {
   zIndex: 999992
 }
 
+/** 4. 密接-次密接 区域路径（绿） */
 const STYLE_REGION_CLOSE_SECONDARY = {
-  strokeColor: '#1ac0c6',
+  strokeColor: '#00b300',   // ← 新颜色
   strokeWeight: 13,
   strokeOpacity: 0.45,
   isOutline: true,
@@ -275,6 +281,7 @@ const STYLE_REGION_CLOSE_SECONDARY = {
   lineJoin: 'round',
   zIndex: 999993
 }
+
 
 /** polyline 引用（用于 show/hide） */
 const baseFullPolyline = ref(null)              // 疑似完整路径
@@ -305,9 +312,6 @@ const hoverTooltip = ref({
 /**
  * 记录“因为悬停而临时显示”的密接完整路径：
  * key: closeId → true
- * 逻辑：
- *  - 如果该密接原本 expanded = false，则悬停时淡淡显示其完整路径
- *  - 移出悬停时再隐藏回去
  */
 const hoverTempCloseFull = new Map()
 
@@ -382,7 +386,6 @@ function sliceTraceByTime (trace, startTime, endTime) {
 
 /**
  * 调用 /api/tracing/:id1，转换为“疑 / 密 / 次”结构
- *（这里是你之前确认过的只保留第一次密接时间段的逻辑）
  */
 async function fetchContactGraphFromApi (baseId) {
   const url = `${API_BASE}/api/tracing/${encodeURIComponent(baseId)}`
@@ -697,10 +700,6 @@ function cardHoverKey (item) {
 
 /**
  * 地图发来的“区域路径悬停进入”事件
- * base-close:
- *   { regionType:'base-close', id: closeId, baseId }
- * close-secondary:
- *   { regionType:'close-secondary', id: secId, closeId, key }
  */
 function handleRegionHoverIn (payload) {
   const { regionType, id, closeId, baseId, key } = payload || {}
@@ -714,7 +713,6 @@ function handleRegionHoverIn (payload) {
     hoveredRegionKey.value = `sec:${compositeKey}`
   }
 
-  // 设置 tooltip 内容
   const all = results.value
   if (regionType === 'base-close') {
     const baseItem = all.find((r) => r.type === 'base')
@@ -751,7 +749,6 @@ function handleRegionHoverIn (payload) {
   // 地图上的操作：
   //  1) base-close：高亮区域 + 对应密接完整路径淡淡显示（如果原本是隐藏状态）
   //  2) close-secondary：不改任何路径，只做 UI 提示
-
   if (regionType === 'base-close') {
     const regionPolyline = regionBaseClosePolylines.get(id)
     setRegionHoverStyle(regionPolyline, regionType, true)
@@ -764,9 +761,7 @@ function handleRegionHoverIn (payload) {
 
     if (!closeItem || !fullPolyline) return
 
-    // 如果该密接的完整路径当前是隐藏（expanded = false），则悬停时以低透明度显示
     if (!closeItem.expanded) {
-      // 避免重复标记
       if (!hoverTempCloseFull.has(closeIdForFull)) {
         hoverTempCloseFull.set(closeIdForFull, true)
         fullPolyline.setOptions({
@@ -777,7 +772,6 @@ function handleRegionHoverIn (payload) {
       }
     }
   } else if (regionType === 'close-secondary') {
-    // 按你的要求：密接-次密接 区域不触发地图路径变化
     return
   }
 }
@@ -796,17 +790,14 @@ function handleRegionHoverOut (payload) {
   } else if (regionType === 'close-secondary') {
     const compositeKey = key || `${closeId}__${id}`
     regionKey = `sec:${compositeKey}`
-    // 不改区域线样式
   }
 
   if (hoveredRegionKey.value === regionKey) {
     hoveredRegionKey.value = null
   }
 
-  // tooltip 关闭
   hoverTooltip.value.visible = false
 
-  // 恢复密接完整路径（只对 base-close 生效）
   if (regionType === 'base-close') {
     const closeIdForFull = id
     const isTempShown = hoverTempCloseFull.get(closeIdForFull)
@@ -817,9 +808,7 @@ function handleRegionHoverOut (payload) {
 
     if (isTempShown && fullPolyline && closeItem) {
       hoverTempCloseFull.delete(closeIdForFull)
-      // 恢复默认样式
       fullPolyline.setOptions(STYLE_CLOSE_FULL)
-      // 如果原本是隐藏状态，移出悬停后继续隐藏
       if (!closeItem.expanded) {
         fullPolyline.hide()
       }
@@ -829,7 +818,10 @@ function handleRegionHoverOut (payload) {
 
 /**
  * 排序后的结果展示：
- * 主疑 → 按顺序的密接 → 它展开时的次密接（如果没有次密接，则插入“无次密接”提示框）
+ * 主疑 → 按顺序的密接 → 它展开时的次密接
+ * 特殊：
+ *  - 如果该密接展开但没有任何次密接 → 插入“无次密接”提示
+ *  - 如果整个疑似没有任何密接 → 在疑似下面插入“无密接”提示
  */
 const visibleResults = computed(() => {
   const all = results.value
@@ -856,11 +848,25 @@ const visibleResults = computed(() => {
           id: `no-secondary-${close.id}`,
           type: 'no-secondary',
           parentId: close.id,
-          visualize: true
+          visualize: true,
+          // 无次密接提示
+          message: '该密接暂无次密接记录'
         })
       }
     }
   })
+
+  // 新增：如果没有任何密接，则在疑似下面插入“无密接”提示卡片
+  if (base && closeList.length === 0) {
+    ordered.push({
+      id: `no-close-${base.id}`,
+      type: 'no-secondary',
+      parentId: base.id,
+      visualize: true,
+      // 无密接提示
+      message: '该疑似暂无密接记录'
+    })
+  }
 
   if (!base) {
     const others = all.filter(
@@ -996,7 +1002,8 @@ const onCardClick = (item) => {
 
 /**
  * 密接卡片右侧“展开/收起”按钮：
- * 只控制密接完整路径显隐
+ *  - 展开：只控制密接完整路径显隐，次密接保持当前可见状态（但列表中只有在 expanded 才会渲染）
+ *  - 收起：隐藏密接完整路径，同时将该密接下的所有次密接事件框隐藏（visualize = false，区域路径隐藏）
  */
 const toggleExpand = (item) => {
   if (item.type !== 'close') return
@@ -1004,13 +1011,37 @@ const toggleExpand = (item) => {
   const wasExpanded = item.expanded
   item.expanded = !item.expanded
 
+  // 控制密接完整路径（橙色）
   const poly = closeFullPolylines.get(item.id)
   if (poly) {
     if (!wasExpanded && item.expanded) {
+      // 由收起 → 展开：显示完整路径
       poly.show()
     } else if (wasExpanded && !item.expanded) {
+      // 由展开 → 收起：隐藏完整路径
       poly.hide()
     }
+  }
+
+  // 如果是【由展开 → 收起】状态变化，则把该密接下所有次密接全部隐藏
+  if (wasExpanded && !item.expanded) {
+    const secondaries = results.value.filter(
+      (r) => r.type === 'secondary' && r.parentId === item.id
+    )
+
+    secondaries.forEach((sec) => {
+      // 1) 逻辑上统一设为不可视
+      if (sec.visualize) {
+        sec.visualize = false
+      }
+
+      // 2) 隐藏对应的“密接-次密接 区域路径（青色）”
+      const key = `${item.id}__${sec.id}`
+      const region = regionCloseSecondaryPolylines.get(key)
+      if (region) {
+        region.hide()
+      }
+    })
   }
 }
 
@@ -1018,26 +1049,66 @@ const toggleExpand = (item) => {
  * 顶部“全选”：
  * - 只控制密接卡片 visualize
  * - 同时控制所有“疑似-密接 区域路径（黄）”显隐
+ * - 当取消全选（next === false）时：
+ *    1）把当前“已展开”的密接事件框收起（expanded = false，隐藏密接完整路径）
+ *    2）把所有次密接事件框隐藏（visualize = false，隐藏密接-次密接区域路径）
  */
 const toggleSelectAll = (event) => {
-  const next = event.target.checked
+  const next = event.target.checked // true：全选；false：取消全选
   selectAll.value = next
 
-  const list = results.value.filter((r) => r.type === 'close')
-  list.forEach((item) => {
+  // 1. 操作所有【密接】事件框
+  const closeList = results.value.filter((r) => r.type === 'close')
+
+  closeList.forEach((item) => {
     const wasVisible = item.visualize
+
+    // (1) 无论是全选还是取消全选，都同步密接的 visualize
     item.visualize = next
 
+    // (2) 同步“疑似-密接 区域路径（黄）”显隐
     const region = regionBaseClosePolylines.get(item.id)
     if (region) {
       if (!wasVisible && next) {
+        // 原本不可见 → 全选后显示
         region.show()
       } else if (wasVisible && !next) {
+        // 原本可见 → 取消全选后隐藏
         region.hide()
       }
     }
+
+    // (3) 只要是“取消全选”（next === false），就收起当前所有已展开的密接事件框
+    if (!next && item.expanded) {
+      item.expanded = false
+
+      // 收起时隐藏密接完整路径（橙色）
+      const fullPolyline = closeFullPolylines.get(item.id)
+      if (fullPolyline) {
+        fullPolyline.hide()
+      }
+    }
   })
+
+  // 2. 只要是取消全选（next === false），就把所有次密接事件框隐藏
+  if (!next) {
+    const secondaryList = results.value.filter((r) => r.type === 'secondary')
+
+    secondaryList.forEach((sec) => {
+      if (sec.visualize) {
+        sec.visualize = false
+      }
+      const key = `${sec.parentId}__${sec.id}`
+      const region = regionCloseSecondaryPolylines.get(key)
+      if (region) {
+        region.hide()
+      }
+    })
+  }
 }
+
+
+
 </script>
 
 <style scoped>
@@ -1235,7 +1306,7 @@ const toggleSelectAll = (event) => {
   box-shadow: 0 0 0 1px rgba(22, 119, 255, 0.4);
 }
 
-/* “无次密接”提示卡片 */
+/* “无次密接 / 无密接”提示卡片 */
 .result-card.no-secondary-card {
   background: #fcfcfc;
   border-style: dashed;
@@ -1262,17 +1333,20 @@ const toggleSelectAll = (event) => {
   user-select: none;
 }
 .badge-base {
-  background: #e74645;
+  background: #ff0000;  /* 疑：深红，与疑似完整路径一致 */
   color: #fff;
 }
+
 .badge-close {
-  background: #fadb14;
-  color: #000;
-}
-.badge-secondary {
-  background: #1ac0c6;
+  background: #b30086;  /* 密：紫红，与密接完整路径一致 */
   color: #fff;
 }
+
+.badge-secondary {
+  background: #00b300;  /* 次：绿色，与次密接区域路径一致 */
+  color: #fff;
+}
+
 
 /* ID 文本 */
 .id-text {
@@ -1280,7 +1354,7 @@ const toggleSelectAll = (event) => {
   color: #333;
 }
 
-/* 展开按钮（密接）：60° 锐角小箭头，放大一倍 */
+/* 展开按钮（密接）：60° 锐角箭头，放大一倍 */
 .expand-btn {
   border: none;
   background: transparent;
@@ -1304,7 +1378,7 @@ const toggleSelectAll = (event) => {
   height: 28px;
 }
 
-/* “无次密接”提示内容 */
+/* “无次密接 / 无密接”提示内容 */
 .no-secondary-dot {
   width: 6px;
   height: 6px;
