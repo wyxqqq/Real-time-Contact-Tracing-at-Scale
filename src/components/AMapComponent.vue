@@ -182,8 +182,31 @@ const addPolyline = (path, options = {}) => {
 
   // 延迟执行确保折线已完成渲染
   setTimeout(() => {
+
+    // 1. 获取折线的所有坐标点（路径）
+    const path = polyline.getPath(); // 返回 LngLat 数组或 [lng, lat] 数组
+    // 2. 计算中心点（经纬度平均值）
+    let totalLng = 0; // 经度总和
+    let totalLat = 0; // 纬度总和
+    const pointCount = path.length;
+
+    path.forEach(point => {
+      // 处理不同格式的坐标（根据实际数据结构调整）
+      const lng = Array.isArray(point) ? point[0] : point.getLng();
+      const lat = Array.isArray(point) ? point[1] : point.getLat();
+      totalLng += lng;
+      totalLat += lat;
+    });
+
+    const centerLng = totalLng / pointCount; // 平均经度（中心点经度）
+    const centerLat = totalLat / pointCount; // 平均纬度（中心点纬度）
+
+    // 3. 设置地图中心点
+    map.value.setCenter(new AMap.LngLat(centerLng, centerLat));
+
     // 让地图视图适配折线范围，第二个参数是边距（像素）
-    map.value.setFitView([polyline], 100);
+    // map.value.setFitView(new AMap.LngLat(path[1].getLng(), path[1].getLat()), 1000);
+    map.value.setZoom(12.65);
   }, 10);
 
   return polyline;
