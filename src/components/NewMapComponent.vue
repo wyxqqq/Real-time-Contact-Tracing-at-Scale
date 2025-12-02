@@ -5,6 +5,7 @@
 <script setup name="NewMapComponent">
 import { ref, shallowRef, onMounted, onUnmounted, nextTick } from 'vue';
 import AMapLoader from "@amap/amap-jsapi-loader";
+import AllContactsData from '@/data/all_contacts.json';
 
 // 地图核心实例（使用shallowRef减少响应式开销）
 // shallowRef 是一个用于创建浅层响应式引用的 API，它属于 Vue 的 reactivity 模块（通常与 ref、reactive 等配合使用）。
@@ -155,7 +156,7 @@ const setFilterTime = (time) => {
  */
 const loadAndProcessData = async () => {
     try {
-        const { default: AllContactsData } = await import('@/data/all_contacts.json');
+        // const { default: AllContactsData } = await import('@/data/all_contacts.json');
 
         const worker = new Worker(new URL('@/workers/coordinateProcessor.js', import.meta.url));
 

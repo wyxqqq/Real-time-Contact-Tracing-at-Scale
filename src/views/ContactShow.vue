@@ -24,13 +24,14 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import NewMapComponent from '@/components/NewMapComponent.vue';
 import * as echarts from 'echarts';
+
 // 导入密接时间数据
 import timeContactData from '@/data/time_contact.json';
 // 导入所有接触对结束时刻的位置数据
 import AllContactsData from '@/data/all_contacts.json';
 
 // 图表实例引用
-let chartInstance = ref < echarts.ECharts | null > (null);
+let chartInstance = ref(null);
 const mapComponent = ref(null);
 let currentTime = ref(599); // 存储当前选中的时间点
 const inputTime = ref(''); // 输入框绑定的时间值
