@@ -11,7 +11,7 @@
       <!-- 新增时间输入框 -->
       <div class="time-input-container">
         
-        <input type="number" v-model="inputTime" class="time-input" placeholder="输入时间（0-600秒）" min="0" max="600"
+        <input type="number" v-model="inputTime" class="time-input" placeholder="输入时间（0-599秒）" min="0" max="599"
           @keyup.enter="handleTimeInput">
         <button @click="handleTimeInput" class="time-input-btn">确认</button>
       </div>
@@ -41,7 +41,7 @@ const handleTimeInput = () => {
   // 验证输入合法性
   const time = parseInt(inputTime.value, 10);
   if (isNaN(time) || time < 0 || time > 600) {
-    alert('请输入0-600之间的有效时间');
+    alert('请输入0-599之间的有效时间');
     return;
   }
 
@@ -87,8 +87,6 @@ const handleTimeInput = () => {
     mapComponent.value.setFilterTime(closestTime);
   }
 
-  // 清空输入框
-  inputTime.value = '';
 };
 
 // 初始化图表

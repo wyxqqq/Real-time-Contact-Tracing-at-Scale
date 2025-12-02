@@ -98,6 +98,7 @@ nav a.class-active {
   /* 活跃状态背景色 */
   font-weight: 2000;
   font-weight: bold;
+  background-color: #fff;
 }
 
 .all {

@@ -56,7 +56,7 @@
           v-model.trim="personId"
           class="search-input"
           type="text"
-          placeholder="输入要搜索的 ID（回车或点搜索）"
+          placeholder="输入要搜索的 ID（回车或点击搜索）"
           aria-label="搜索ID"
         />
         <button type="submit" class="btn primary">搜索</button>

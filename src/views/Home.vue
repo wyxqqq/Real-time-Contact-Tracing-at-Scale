@@ -52,8 +52,8 @@ import jinanStreetGeoData from '@/data/jinanStreetGeo.json';
 const videoUrl1 = '/ContactSearch';
 const videoUrl2 = '/ContactShow';
 
-const title1 = ref("个人轨迹查询");
-const title2 = ref("密接人员展示");
+const title1 = ref("单目标密接事件轨迹查询");
+const title2 = ref("全范围密接事件数量概览");
 
 /**
  * 处理卡片点击事件
