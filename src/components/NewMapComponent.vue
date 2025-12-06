@@ -167,7 +167,8 @@ const loadAndProcessData = async () => {
                 coordinates.value = e.data.map(item => ({
                     ...item,
                     time: item.time || 0, // 假设原始数据中有time字段
-                    name: item.id1
+                    name: item.id1,
+                    name2: item.id2,
                 }));
                 initializeMassMarks();
                 worker.terminate();
@@ -246,7 +247,7 @@ const loadMarksInBatches = (data, style) => {
         });
 
         const handleMouseOver = (e) => {
-            infoWindow.setContent(`ID1: ${e.data.name} `);
+            infoWindow.setContent(`ID1: ${e.data.name} <br> ID2: ${e.data.name2} <br> time: ${e.data.time}`);
             infoWindow.open(map.value, e.data.lnglat);
         };
 

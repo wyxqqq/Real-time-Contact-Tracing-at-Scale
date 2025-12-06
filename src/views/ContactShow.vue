@@ -227,7 +227,7 @@ const initChart = () => {
     // 获取点击位置对应的时间
     const clickedTime = Math.round(params.value[0]);
     currentTime.value = clickedTime;
-    inputTime.value = clickedTime;
+    inputTime.value = clickedTime;// 将输入框中的时间和点击折线图的时间节点绑定
     // 更新光点位置
     chartInstance.setOption({
       series: [{
