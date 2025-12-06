@@ -6,21 +6,21 @@ import ContactSearch from '../views/ContactSearch.vue'
 
 const routes = [
   {
-    name:'Home',
+    name: 'Home',
     path: '/Home',
     component: Home
   },
   {
-    name:'ContactShow',
-    path:'/ContactShow',
-    component:ContactShow
+    name: 'ContactShow',
+    path: '/ContactShow',
+    component: ContactShow
   },
   {
-    name:'ContactSearch',
-    path:'/ContactSearch',
-    component:ContactSearch
+    name: 'ContactSearch',
+    path: '/ContactSearch',
+    component: ContactSearch
   },
-    {
+  {
     path: '/',
     name: 'Home_init',
     component: Home

@@ -167,8 +167,7 @@ const loadAndProcessData = async () => {
                 coordinates.value = e.data.map(item => ({
                     ...item,
                     time: item.time || 0, // 假设原始数据中有time字段
-                    name1: item.id1,
-                    name2:item.id2
+                    name: item.id1
                 }));
                 initializeMassMarks();
                 worker.terminate();
@@ -214,7 +213,7 @@ const getVisibleCoordinates = (data) => {
         const inBounds = bounds.contains(new AMapInstance.value.LngLat(lng, lat));
 
         // 时间可见性判断
-        const inTimeRange =  (filterTime.value > 0 && filterTime.value <= 600) || item.time <= filterTime.value;
+        const inTimeRange =  (filterTime.value > 0 && filterTime.value < 600) && item.time <= filterTime.value;
 
         return inBounds && inTimeRange;
     });
@@ -247,7 +246,7 @@ const loadMarksInBatches = (data, style) => {
         });
 
         const handleMouseOver = (e) => {
-            infoWindow.setContent(`ID1: ${e.data.name1} <br/> ID2: ${e.data.name2}`);
+            infoWindow.setContent(`ID1: ${e.data.name} `);
             infoWindow.open(map.value, e.data.lnglat);
         };
 

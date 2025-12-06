@@ -7,10 +7,10 @@
 
     <!-- 图表区域：展示轨迹分析（如时间-位置变化） -->
     <div class="LineChart">
-      <div >可以点击蓝色折线或输入时间查看某一时刻密接事件分布</div>
+      <div>可以点击蓝色折线或输入时间查看某一时刻密接事件分布</div>
       <!-- 新增时间输入框 -->
       <div class="time-input-container">
-        
+
         <input type="number" v-model="inputTime" class="time-input" placeholder="输入时间（0-599秒）" min="0" max="599"
           @keyup.enter="handleTimeInput">
         <button @click="handleTimeInput" class="time-input-btn">确认</button>
@@ -40,7 +40,7 @@ const inputTime = ref(''); // 输入框绑定的时间值
 const handleTimeInput = () => {
   // 验证输入合法性
   const time = parseInt(inputTime.value, 10);
-  if (isNaN(time) || time < 0 || time > 600) {
+  if (isNaN(time) || time < 0 || time >= 600) {
     alert('请输入0-599之间的有效时间');
     return;
   }
@@ -86,6 +86,9 @@ const handleTimeInput = () => {
   if (mapComponent.value) {
     mapComponent.value.setFilterTime(closestTime);
   }
+
+  // 清空输入框
+  // inputTime.value = '';
 
 };
 
@@ -224,6 +227,7 @@ const initChart = () => {
     // 获取点击位置对应的时间
     const clickedTime = Math.round(params.value[0]);
     currentTime.value = clickedTime;
+    inputTime.value = clickedTime;
     // 更新光点位置
     chartInstance.setOption({
       series: [{
