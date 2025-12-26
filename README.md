@@ -36,3 +36,6 @@ npm run dev
 ```sh
 npm run build
 ```
+
+
+my first open project
